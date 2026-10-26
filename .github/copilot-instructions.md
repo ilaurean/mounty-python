@@ -52,6 +52,7 @@
 - Queries should look like I<<Action>>Query and kept in the same file with the implementation: <<Action>>Query and defined in <<Project>>/Features/<<Feature>>/Queries.
 - Commands should look like I<<Action>>Command and kept in the same file with the implementation: <<Action>>Command and defined in <<Project>>/Features/<<Feature>>/Commands.
 - Consumers should look like I<<Action>>Consumer and kept in the same file with the implementation: <<Action>>Consumer and defined in <<Project>>/Features/<<Feature>>/Consumers.
+- Ask before changing the Domain Models.
 
 ## Frontend Conventions
 - use Signal-Forms for forms, and use NgRx for state management.

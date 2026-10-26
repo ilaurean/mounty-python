@@ -4,7 +4,7 @@ on:
   push:
     branches: ["**"]        # every branch, every push
   pull_request:
-    branches: ["main", "story/**"] # only PRs targeting master or story branches
+    branches: ["main", "story/**"] # only PRs targeting main or story branches
 
 # Cancel an in-progress CI run for the same branch/PR when a new push arrives.
 # This keeps queues clean on rapid pushes without blocking CD.
