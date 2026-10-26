@@ -16,8 +16,8 @@ public class OrderRepository(OperativeDbContext context, IPublisher publisher) :
     public override IQueryable<Order> Entities => Context.Set<Order>()
         .Where(x => x.DeleteDate == null)
         .Include(o => o.Items)
-        .ThenInclude(i => i.Board)
-        .ThenInclude(b => b.Components);
+            .ThenInclude(i => i.Board)
+                .ThenInclude(b => b.Components);
 
     public override Task<Order?> GetByIDAsync(string id, CancellationToken cancellationToken)
     {

@@ -18,15 +18,19 @@ public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQue
 
         if (!string.IsNullOrWhiteSpace(filter.BoardID))
         {
-            query = query.Where(b => b.ID == filter.BoardID);
+            query = query.Where(x => x.ID == filter.BoardID);
         }
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            query = query.Where(b => b.Name.Contains(filter.Name));
+            query = query.Where(x => x.Name.Contains(filter.Name));
         }
 
-        IList<BoardDTO> result = query.ToList().Select(b => b.ToDTO()).ToList();
+        IList<BoardDTO> result = query
+            .OrderBy(x => x.Name)
+            .Skip(filter.pageIndex ?? 0)
+            .Take(filter.pageSize ?? 20)
+            .Select(x => x.ToDTO()).ToList();
         return Task.FromResult(result);
     }
 }

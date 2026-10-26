@@ -14,13 +14,13 @@ public static class CatalogsModule
         services.AddScoped<ICatalogRepository, CatalogRepository>();
 
         // Queries
-        services.AddScoped<IGetBoardByIDQuery, GetBoardByIDQuery>();
-        services.AddScoped<ISearchBoardsQuery, SearchBoardsQuery>();
+        services.AddTransient<IGetBoardByIDQuery, GetBoardByIDQuery>();
+        services.AddTransient<ISearchBoardsQuery, SearchBoardsQuery>();
 
         // Commands
-        services.AddScoped<ICreateBoardCommand, CreateBoardCommand>();
-        services.AddScoped<IUpdateBoardCommand, UpdateBoardCommand>();
-        services.AddScoped<IDeleteBoardCommand, DeleteBoardCommand>();
+        services.AddTransient<ICreateBoardCommand, CreateBoardCommand>();
+        services.AddTransient<IUpdateBoardCommand, UpdateBoardCommand>();
+        services.AddTransient<IDeleteBoardCommand, DeleteBoardCommand>();
 
         return services;
     }
