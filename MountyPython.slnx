@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/Backend/" />
+  <Folder Name="/Backend/Inventory/">
+    <Project Path="Backend/Inventory/Inventory.Contracts/Inventory.Contracts.csproj" Id="23ed59f0-147e-4d8d-9c30-d8b75e0da908" />
+    <Project Path="Backend/Inventory/Inventory.Services/Inventory.Services.csproj" />
+    <Project Path="Backend/Inventory/Inventory.Tests/Inventory.Tests.csproj" Id="621b930a-af95-4dfa-b9c1-ddde8a979219" />
+  </Folder>
+  <Folder Name="/Backend/Notifications/">
+    <Project Path="Backend/Notifications/Notification.Services/Notification.Services.csproj" />
+  </Folder>
+  <Folder Name="/Backend/Operatives/">
+    <Project Path="Backend/Operatives/Operative.Contracts/Operative.Contracts.csproj" Id="915b744c-9b0b-44cd-8502-b3997b47a266" />
+    <Project Path="Backend/Operatives/Operative.Services/Operative.Services.csproj" />
+    <Project Path="Backend/Operatives/Operative.Tests/Operative.Tests.csproj" Id="8c6a6fc4-3e5a-4e33-83f3-29b1221136cb" />
+  </Folder>
+  <Folder Name="/Backend/Shared/">
+    <Project Path="Backend/Shared/Commons.Contracts/Commons.Contracts.csproj" Id="4b5fa0e9-56eb-4e7c-894a-91e6f5d2ca93" />
+    <Project Path="Backend/Shared/Commons.Test/Commons.Test.csproj" />
+    <Project Path="Backend/Shared/Commons/Commons.csproj" />
+  </Folder>
+  <Folder Name="/Clients/">
+    <Project Path="Clients/mountypython.client/mountypython.client.esproj">
+      <Build />
+    </Project>
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Solution Items/ChipHappens.jpg" />
+    <File Path="Solution Items/Coding_Challenge_EN.pdf" />
+    <File Path="Solution Items/ComponentCommander.jpg" />
+    <File Path="Solution Items/SolderAndOrder.jpg" />
+  </Folder>
+  <Project Path="MountyPython.AppHost/MountyPython.AppHost.csproj" />
+  <Project Path="MountyPython.ServiceDefaults/MountyPython.ServiceDefaults.csproj" />
+</Solution>

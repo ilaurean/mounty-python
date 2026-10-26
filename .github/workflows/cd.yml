@@ -1,0 +1,227 @@
+name: CD
+
+on:
+  # Triggered after CI passes. Only acts on dev-branch (DEV) or master (PROD).
+  # Feature/story branches run CI only; CD is skipped entirely.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches:
+      - dev-branch    # deploys to DEV
+      - main          # deploys to PROD
+
+permissions:
+  contents: write   # required to push git tags after DEV deploy
+  id-token: write   # required for OIDC federated login (azure/login@v2)
+
+# One concurrent deployment per environment. A newer push cancels
+# an in-progress deployment for the same target environment.
+concurrency:
+  group: cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  AZURE_LOCATION: "northeurope"
+
+jobs:
+
+# ── Guard: abort if CI failed ──────────────────────────────────────────────────
+# workflow_run fires on both success AND failure. This job gates everything else.
+  ci-gate:
+    name: CI passed?
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: CI succeeded - proceeding with CD
+        run: echo "CI run ${{ github.event.workflow_run.id }} passed on ${{ github.event.workflow_run.head_branch }}"
+
+# ── Version ────────────────────────────────────────────────────────────────────
+# Re-compute using the same commit SHA and run number logic as CI.
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    needs: ci-gate
+    outputs:
+      semver: ${{ steps.ver.outputs.semver }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Compute version
+        id: ver
+        run: |
+          BASE=$(cat VERSION | tr -d '[:space:]')
+          SEMVER="${BASE}.${{ github.event.workflow_run.run_number }}"
+          echo "semver=${SEMVER}" >> $GITHUB_OUTPUT
+          echo "Version: ${SEMVER}"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DEV pipeline - runs only when the triggering branch is dev-branch
+#
+# aspire deploy replaces azd up:
+#   - reads the Aspire AppHost deployment environment (AddAzureContainerAppEnvironment)
+#   - provisions/updates infra via Bicep, pushes images, updates ACA
+#
+# Required GitHub environment:
+#   "dev"  - add required reviewers here to gate the deployment
+# ══════════════════════════════════════════════════════════════════════════════
+
+  deploy-dev:
+    name: Deploy (dev)
+    runs-on: ubuntu-latest
+    needs: version
+    if: github.event.workflow_run.head_branch == 'dev-branch'
+    environment: dev   # <- protected environment: add required reviewers here
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore workloads
+        run: dotnet workload restore
+
+      - name: Install Aspire CLI
+        run: |
+          curl -sSL https://aspire.dev/install.sh | bash
+          echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Purge soft-deleted Key Vaults (dev)
+        # Azure soft-deletes Key Vaults for 90 days even after the RG is removed.
+        # A stale soft-deleted KV with the same name blocks re-provisioning.
+        # azure/login@v2 configures both az CLI and the Azure SDK/DefaultAzureCredential.
+        continue-on-error: true
+        run: |
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          az keyvault list-deleted --query "[?starts_with(name,'postgres')].[name,properties.location]" -o tsv 2>/dev/null | \
+          while IFS=$'\t' read -r kv loc; do
+            echo "Purging soft-deleted Key Vault: $kv (location: $loc)"
+            az keyvault purge --name "$kv" --location "$loc" || true
+          done
+
+      - name: Deploy with Aspire (dev)
+        env:
+          Azure__SubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          Azure__TenantId:       ${{ secrets.AZURE_TENANT_ID }}
+          Azure__Location:       ${{ env.AZURE_LOCATION }}
+          Azure__ResourceGroup:  rg-mountypython-dev
+          Parameters__registry_endpoint:            ${{ secrets.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
+          Parameters__registry_managed_identity_id: ${{ secrets.AZURE_MI_RESOURCE_ID }}
+          Parameters__image_tag:                     ${{ needs.version.outputs.semver }}
+          ENVIRONMENT:                               Development
+        run: |
+          aspire deploy \
+            --apphost MountyPython.AppHost/MountyPython.AppHost.csproj \
+            --environment dev \
+            --non-interactive
+
+      - name: Tag commit with deployed version
+        # Push a git tag so PROD knows which commit was verified on DEV.
+        # The tag (e.g. v1.0.42) is the promotion artifact.
+        run: |
+          TAG="v${{ needs.version.outputs.semver }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git tag "$TAG" "${{ github.event.workflow_run.head_sha }}"
+          git push origin "$TAG"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PROD pipeline - runs only when the triggering branch is master
+#
+# No-rebuild promotion flow:
+#   1. deploy-dev built images tagged {semver} and pushed them to the shared ACR
+#   2. Developer opens PR from dev-branch -> master
+#   3. PR is reviewed and merged - this CD run is triggered on master
+#   4. This job resolves the tag on the merge commit's first parent
+#      (the original dev-branch HEAD that was verified on DEV)
+#   5. aspire deploy provisions/updates PROD using the pre-built image tag
+# ══════════════════════════════════════════════════════════════════════════════
+
+  deploy-prod:
+    name: Deploy (prod) - promote
+    runs-on: ubuntu-latest
+    needs: version
+    if: github.event.workflow_run.head_branch == 'master'
+    environment: prod   # <- protected environment: add required reviewers here
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0   # required to read tags and walk parent commits
+
+      - name: Resolve DEV-verified commit
+        id: tag
+        # The PR from dev-branch → master must use "Create a merge commit" (not squash).
+        # HEAD^1 = previous tip of master (base branch, never tagged).
+        # HEAD^2 = tip of dev-branch at merge time — tagged v{semver} by deploy-dev.
+        run: |
+          DEV_SHA=$(git rev-parse HEAD^2)
+          TAG=$(git tag --points-at "$DEV_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [ -z "$TAG" ]; then
+            echo "::error::No semver tag on dev-branch commit ($DEV_SHA). Was deploy-dev successful? Reminder: merge dev-branch → master with 'Create a merge commit', not squash."
+            exit 1
+          fi
+          SEMVER=${TAG#v}
+          git checkout "$DEV_SHA"
+          echo "semver=${SEMVER}" >> $GITHUB_OUTPUT
+          echo "Promoting commit ${DEV_SHA} tagged ${TAG}"
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore workloads
+        run: dotnet workload restore
+
+      - name: Install Aspire CLI
+        run: |
+          curl -sSL https://aspire.dev/install.sh | bash
+          echo "$HOME/.aspire/bin" >> "$GITHUB_PATH"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Purge soft-deleted Key Vaults (prod)
+        continue-on-error: true
+        run: |
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          az keyvault list-deleted --query "[?starts_with(name,'postgres')].[name,properties.location]" -o tsv 2>/dev/null | \
+          while IFS=$'\t' read -r kv loc; do
+            echo "Purging soft-deleted Key Vault: $kv (location: $loc)"
+            az keyvault purge --name "$kv" --location "$loc" || true
+          done
+
+      - name: Deploy with Aspire (prod)
+        # Pull the pre-built image from the shared ACR — same binary as DEV.
+        # Parameters__image_tag tells Aspire which tag to deploy; no docker build runs here.
+        env:
+          Azure__SubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          Azure__TenantId:       ${{ secrets.AZURE_TENANT_ID }}
+          Azure__Location:       ${{ env.AZURE_LOCATION }}
+          Azure__ResourceGroup:  rg-mountypython-prod
+          Parameters__registry_endpoint:            ${{ secrets.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
+          Parameters__registry_managed_identity_id: ${{ secrets.AZURE_MI_RESOURCE_ID }}
+          Parameters__image_tag:                     ${{ steps.tag.outputs.semver }}
+          ENVIRONMENT:                               Production
+        run: |
+          aspire deploy \
+            --apphost MountyPython.AppHost/MountyPython.AppHost.csproj \
+            --environment prod \
+            --non-interactive

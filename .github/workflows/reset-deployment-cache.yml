@@ -1,0 +1,75 @@
+name: Reset Aspire Deployment Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to clean
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+      confirm:
+        description: 'Type the environment name again to confirm (e.g. "dev")'
+        required: true
+
+permissions:
+  actions: write
+  contents: read
+
+env:
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  reset:
+    name: Reset deployment cache (${{ github.event.inputs.environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Confirm environment matches input
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "${{ github.event.inputs.environment }}" ]; then
+            echo "::error::Confirmation input '${{ github.event.inputs.confirm }}' does not match environment '${{ github.event.inputs.environment }}'. Aborting."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore workloads
+        run: dotnet workload restore
+
+      - name: Install Aspire CLI
+        run: dotnet tool install --global Aspire.Cli
+
+      - name: Delete GitHub Actions deployment caches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEY_PREFIX: aspire-state-${{ github.event.inputs.environment }}-
+        run: |
+          echo "Deleting GitHub Actions caches with prefix '$KEY_PREFIX'"
+          CACHE_IDS=$(gh api "repos/${{ github.repository }}/actions/caches?per_page=100" --paginate --jq '.actions_caches[] | select(.key | startswith(env.KEY_PREFIX)) | .id' || true)
+
+          if [ -z "$CACHE_IDS" ]; then
+            echo "No GitHub Actions caches found for prefix '$KEY_PREFIX'."
+          else
+            for id in $CACHE_IDS; do
+              echo "Deleting cache id: $id"
+              gh api --method DELETE "repos/${{ github.repository }}/actions/caches/$id"
+            done
+          fi
+
+      - name: Clear Aspire deployment cache on runner
+        run: |
+          rm -rf ~/.aspire/deployments
+          rm -rf ~/.aspire/cache
+          echo "Cleared ~/.aspire/deployments and ~/.aspire/cache."
+
+      - name: Reset complete
+        run: echo "Deployment caches cleared for ${{ github.event.inputs.environment }}."
