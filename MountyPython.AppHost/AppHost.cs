@@ -80,9 +80,12 @@ if (!isPublishing)
 var keycloakAuthority = ReferenceExpression.Create(
     $"{keycloak.GetEndpoint("http").Property(EndpointProperty.Url)}/realms/mountypython");
 
+// Must match the audience mapper on the realm client in import.json.
+const string keycloakAudience = "mountypython-api";
 
 var notifications = builder.AddProject<Projects.Notification_Services>("notification-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(messages).WaitFor(messages)
     .WithReference(keycloak).WaitFor(keycloak);
 
@@ -90,6 +93,7 @@ var inventoryDatabaseName = "MountyPython_Inventory" + (builder.Configuration["E
 var inventoryDbResource = postgres.AddDatabase("mountypython-inventorydb", inventoryDatabaseName);
 var inventory = builder.AddProject<Projects.Inventory_Services>("inventory-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(inventoryDbResource).WaitFor(inventoryDbResource)
     .WithReference(notifications).WaitFor(notifications)
     .WithReference(messages).WaitFor(messages)
@@ -99,6 +103,7 @@ var operativeDatabaseName = "MountyPython_Operative" + (builder.Configuration["E
 var operativeDbResource = postgres.AddDatabase("mountypython-operativedb", operativeDatabaseName);
 var orders = builder.AddProject<Projects.Operative_Services>("operative-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(operativeDbResource).WaitFor(operativeDbResource)
     .WithReference(notifications).WaitFor(notifications)
     .WithReference(messages).WaitFor(messages)

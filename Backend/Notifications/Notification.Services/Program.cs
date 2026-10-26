@@ -17,7 +17,7 @@ public class Program
         builder.Services.SetupJsonDefaults();
 
         // Add services to the container.
-        builder.Services.AddAuthentication().AddJwtBearer();
+        builder.Services.AddMountyJwtBearer(builder.Configuration, builder.Environment);
         builder.Services.AddAuthorization();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

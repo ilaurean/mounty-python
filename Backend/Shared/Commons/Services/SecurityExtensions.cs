@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -12,7 +15,40 @@ public static class SecurityExtensions
     public const string CustomerOrManagerPolicy = "CustomerOrManager";
 
     /// <summary>
-    /// Registers the Keycloak realm-role claims mapping and the Manager/Customer authorization policies.
+    /// Configures JWT bearer authentication against Keycloak using Auth:Authority (Auth__Authority) and Auth:Audience.
+    /// HTTP metadata is only allowed in the Development environment.
+    /// </summary>
+    public static IServiceCollection AddMountyJwtBearer(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    {
+        var authority = configuration["Auth:Authority"];
+        if (string.IsNullOrWhiteSpace(authority))
+        {
+            throw new InvalidOperationException("Configuration 'Auth:Authority' (Auth__Authority) is required.");
+        }
+
+        var audience = configuration["Auth:Audience"];
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException("Configuration 'Auth:Audience' (Auth__Audience) is required.");
+        }
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = authority;
+                options.Audience = audience;
+                options.RequireHttpsMetadata = !environment.IsDevelopment();
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters.ValidateIssuer = true;
+                options.TokenValidationParameters.ValidateAudience = true;
+                options.TokenValidationParameters.NameClaimType = "preferred_username";
+                options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
+            });
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the Keycloak realm-role claims mapping
     /// </summary>
     public static IServiceCollection AddMountyAuthorization(this IServiceCollection services)
     {

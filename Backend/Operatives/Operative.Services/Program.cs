@@ -17,7 +17,7 @@ builder.SetupNpgsqlServerDbContext<OperativeDbContext>("mountypython-operativedb
 builder.Services.SetupJsonDefaults();
 
 // Add services to the container.
-builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddMountyJwtBearer(builder.Configuration, builder.Environment);
 builder.Services.AddMountyAuthorization();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddOperationsServices();
