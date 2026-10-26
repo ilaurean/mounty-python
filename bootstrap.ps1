@@ -1,159 +1,138 @@
-#Requires -Version 7
 <#
 .SYNOPSIS
-    One-time bootstrap for the MountyPython CD pipeline.
- 
-.DESCRIPTION
-    Creates the service principal GitHub Actions needs to run `aspire deploy`.
-    Idempotent - safe to re-run.
- 
-    All infrastructure (resource group, ACR, ACA environment, PostgreSQL,
-    Key Vault, managed identity) is provisioned automatically by `aspire deploy`
-    on every CD run - no shared registry or manual Azure setup required.
- 
-.PARAMETER SubscriptionId
-    Target Azure subscription ID.  Prompted interactively if omitted.
- 
-.PARAMETER SpName
-    Display name for the service principal.  Defaults to 'sp-mountypython-cicd'.
- 
+  Bootstraps Azure OIDC federation for GitHub Actions (CD workflow) and injects
+  AZURE_CLIENT_ID / AZURE_TENANT_ID / AZURE_SUBSCRIPTION_ID into the GitHub
+  environments "dev" and "prod".
+
+.PREREQUISITES
+  az CLI (logged in: az login) and gh CLI (logged in: gh auth login, with admin rights on the repo).
+
 .EXAMPLE
-    ./bootstrap.ps1 -SubscriptionId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  ./bootstrap.ps1
+  ./bootstrap.ps1 -DevSubscriptionId <guid> -ProdSubscriptionId <guid>
 #>
+[CmdletBinding()]
 param(
-    [string] $SubscriptionId = "",
-    [string] $SpName         = "sp-mountypython-cicd"
+    [string] $AppName = "mounty-python-github",
+    [string] $Repo,                       # owner/name; auto-detected from git origin if omitted
+    [string] $DevSubscriptionId,          # defaults to current az subscription
+    [string] $ProdSubscriptionId,         # defaults to DevSubscriptionId
+    [string] $DevEnvironment  = "dev",
+    [string] $ProdEnvironment = "prod",
+    [string] $ProdBranch      = "main",
+    [switch] $SkipGitHub                  # only create Azure side and print values
 )
- 
-Set-StrictMode -Version Latest
+
 $ErrorActionPreference = "Stop"
- 
-function Write-Step([string] $msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
-function Write-Ok([string]   $msg) { Write-Host "    OK  $msg" -ForegroundColor Green }
-function Write-Warn([string] $msg) { Write-Host "    !!  $msg" -ForegroundColor Yellow }
- 
-# ---------------------------------------------------------------------------
-# 0 - Prerequisites
-# ---------------------------------------------------------------------------
-Write-Step "Checking prerequisites"
- 
-if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
-    throw "Azure CLI not found.  Install with: winget install --id Microsoft.AzureCLI"
+
+function Invoke-Native {
+    param([scriptblock] $Command)
+    $output = & $Command
+    if ($LASTEXITCODE -ne 0) { throw "Command failed: $Command" }
+    return $output
 }
-Write-Ok "Azure CLI found"
- 
-$account = az account show 2>$null | ConvertFrom-Json
-if (-not $account) {
-    Write-Warn "Not logged in - running az login..."
-    az login | Out-Null
-    $account = az account show | ConvertFrom-Json
+
+# --- Resolve inputs -------------------------------------------------------
+if (-not $Repo) {
+    $remote = (git remote get-url origin).Trim()
+    if ($remote -match 'github\.com[:/](?<repo>[^/]+/[^/]+?)(\.git)?$') { $Repo = $Matches.repo }
+    else { throw "Cannot detect GitHub repo from '$remote'. Pass -Repo owner/name." }
 }
-Write-Ok "Logged in as $($account.user.name)"
- 
-# ---------------------------------------------------------------------------
-# 1 - Select subscription
-# ---------------------------------------------------------------------------
-Write-Step "Selecting subscription"
- 
-if (-not $SubscriptionId) {
-    $SubscriptionId = Read-Host "  Enter subscription ID"
+
+$account  = Invoke-Native { az account show -o json } | ConvertFrom-Json
+$tenantId = $account.tenantId
+if (-not $DevSubscriptionId)  { $DevSubscriptionId  = $account.id }
+if (-not $ProdSubscriptionId) { $ProdSubscriptionId = $DevSubscriptionId }
+
+Write-Host "Repo:          $Repo"
+Write-Host "Tenant:        $tenantId"
+Write-Host "Dev sub:       $DevSubscriptionId"
+Write-Host "Prod sub:      $ProdSubscriptionId"
+
+# --- App registration + service principal (idempotent) --------------------
+$clientId = Invoke-Native { az ad app list --display-name $AppName --query "[0].appId" -o tsv }
+if (-not $clientId) {
+    Write-Host "Creating app registration '$AppName'..."
+    $clientId = Invoke-Native { az ad app create --display-name $AppName --query appId -o tsv }
 }
-az account set --subscription $SubscriptionId | Out-Null
-$sub = az account show | ConvertFrom-Json
-Write-Ok "Using: $($sub.name) ($SubscriptionId)"
- 
-# ---------------------------------------------------------------------------
-# 2 - Service principal
-# ---------------------------------------------------------------------------
-Write-Step "Creating / verifying service principal '$SpName'"
- 
-$spRaw = az ad sp create-for-rbac `
-    --name   $SpName `
-    --role   Contributor `
-    --scopes "/subscriptions/$SubscriptionId" `
-    --output json 2>$null
- 
-if ($spRaw) {
-    $spObj    = $spRaw | ConvertFrom-Json
-    $clientId = $spObj.appId
-    $secret   = $spObj.password
-    $tenant   = $spObj.tenant
-    Write-Ok "Service principal created (appId: $clientId)"
-} else {
-    # SP already exists - reset the credential to obtain a fresh secret.
-    Write-Warn "Service principal '$SpName' already exists - resetting credential..."
-    $clientId = (az ad sp list --display-name $SpName --query "[0].appId" -o tsv)
-    $secret   = (az ad app credential reset --id $clientId --query password -o tsv)
-    $tenant   = $sub.tenantId
-    Write-Ok "Credential reset (appId: $clientId)"
+$appObjectId = Invoke-Native { az ad app show --id $clientId --query id -o tsv }
+
+$spId = Invoke-Native { az ad sp list --filter "appId eq '$clientId'" --query "[0].id" -o tsv }
+if (-not $spId) {
+    Write-Host "Creating service principal..."
+    $spId = Invoke-Native { az ad sp create --id $clientId --query id -o tsv }
 }
- 
-# ---------------------------------------------------------------------------
-# 3 - Role: User Access Administrator
-# ---------------------------------------------------------------------------
-Write-Step "Ensuring 'User Access Administrator' role on subscription"
- 
-# aspire deploy generates Bicep that assigns AcrPull to the ACA managed identity.
-# That requires Microsoft.Authorization/roleAssignments/write - UAA provides it
-# without granting full Owner.
-$scope     = "/subscriptions/$SubscriptionId"
-$uaaExists = az role assignment list `
-    --assignee $clientId `
-    --role     "User Access Administrator" `
-    --scope    $scope `
-    --query    "[0].id" -o tsv 2>$null
- 
-if ($uaaExists) {
-    Write-Ok "Role already assigned"
-} else {
-    az role assignment create `
-        --assignee $clientId `
-        --role     "User Access Administrator" `
-        --scope    $scope `
-        --output   none | Out-Null
-    Write-Ok "Role assigned"
-}
- 
-# ---------------------------------------------------------------------------
-# 4 - Set GitHub secrets (optional - requires gh CLI)
-# ---------------------------------------------------------------------------
-Write-Step "GitHub secrets"
- 
-if (Get-Command gh -ErrorAction SilentlyContinue) {
-    Write-Host "  gh CLI found - setting secrets automatically..." -ForegroundColor Cyan
-    $remote = git -C $PSScriptRoot remote get-url origin 2>$null
-    if ($remote) {
-        $repoName = $remote -replace '.*github\.com[:/]', '' -replace '\.git$', ''
-        gh secret set AZURE_CLIENT_ID       --body $clientId        --repo $repoName
-        gh secret set AZURE_CLIENT_SECRET   --body $secret          --repo $repoName
-        gh secret set AZURE_TENANT_ID       --body $tenant          --repo $repoName
-        gh secret set AZURE_SUBSCRIPTION_ID --body $SubscriptionId  --repo $repoName
-        Write-Ok "All 4 secrets set on $repoName"
-    } else {
-        Write-Warn "Could not determine GitHub repo from git remote - set secrets manually"
+
+# --- Federated credentials (idempotent) -----------------------------------
+# Subjects must match the "environment:" values in .github/workflows/cd.yml
+$credentials = @(
+    @{ name = "github-$DevEnvironment";  subject = "repo:${Repo}:environment:$DevEnvironment" },
+    @{ name = "github-$ProdEnvironment"; subject = "repo:${Repo}:environment:$ProdEnvironment" }
+)
+
+$existing = Invoke-Native { az ad app federated-credential list --id $appObjectId -o json } | ConvertFrom-Json
+foreach ($c in $credentials) {
+    if ($existing | Where-Object { $_.name -eq $c.name }) {
+        Write-Host "Federated credential '$($c.name)' already exists."
+        continue
     }
-} else {
-    Write-Warn "gh CLI not found - set the following secrets manually in GitHub"
+    Write-Host "Creating federated credential '$($c.name)' -> $($c.subject)"
+    $file = New-TemporaryFile
+    @{
+        name      = $c.name
+        issuer    = "https://token.actions.githubusercontent.com"
+        subject   = $c.subject
+        audiences = @("api://AzureADTokenExchange")
+    } | ConvertTo-Json -Compress | Set-Content -Path $file -Encoding utf8
+    Invoke-Native { az ad app federated-credential create --id $appObjectId --parameters "@$file" } | Out-Null
+    Remove-Item $file
 }
- 
-# Always print values for verification
-Write-Host ""
-Write-Host "  Settings > Secrets and variables > Actions" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  AZURE_CLIENT_ID       = $clientId"        -ForegroundColor White
-Write-Host "  AZURE_CLIENT_SECRET   = $secret"          -ForegroundColor Yellow
-Write-Host "  AZURE_TENANT_ID       = $tenant"          -ForegroundColor White
-Write-Host "  AZURE_SUBSCRIPTION_ID = $SubscriptionId"  -ForegroundColor White
-Write-Host ""
-Write-Host "  *** Save AZURE_CLIENT_SECRET now - it cannot be retrieved later ***" -ForegroundColor Red
- 
-# ---------------------------------------------------------------------------
-# 5 - Reminder: GitHub environments
-# ---------------------------------------------------------------------------
-Write-Host ""
-Write-Step "Reminder: create GitHub environments"
-Write-Host "  Settings > Environments:"
-Write-Host "    dev   - optional required reviewers"
-Write-Host "    prod  - required reviewers recommended"
-Write-Host ""
-Write-Host "Bootstrap complete. Push to the 'dev' branch to trigger the first deploy." -ForegroundColor Green
+
+# --- Role assignments (aspire deploy creates RGs and role assignments) ----
+foreach ($sub in ($DevSubscriptionId, $ProdSubscriptionId | Select-Object -Unique)) {
+    $scope = "/subscriptions/$sub"
+    foreach ($role in "Contributor", "User Access Administrator") {
+        $found = Invoke-Native {
+            az role assignment list --assignee $clientId --role $role --scope $scope --query "[].id" -o tsv
+        }
+        if ($found) { Write-Host "Role '$role' already assigned on $scope."; continue }
+
+        Write-Host "Assigning '$role' on $scope..."
+        # --assignee-object-id avoids Entra replication lag failures
+        Invoke-Native {
+            az role assignment create --assignee-object-id $spId --assignee-principal-type ServicePrincipal `
+                --role $role --scope $scope
+        } | Out-Null
+    }
+}
+
+# --- GitHub environments + secrets ----------------------------------------
+$targets = @(
+    @{ env = $DevEnvironment;  sub = $DevSubscriptionId },
+    @{ env = $ProdEnvironment; sub = $ProdSubscriptionId }
+)
+
+if ($SkipGitHub) {
+    Write-Host "`nAZURE_CLIENT_ID=$clientId`nAZURE_TENANT_ID=$tenantId"
+    $targets | ForEach-Object { Write-Host "AZURE_SUBSCRIPTION_ID ($($_.env))=$($_.sub)" }
+    return
+}
+
+foreach ($t in $targets) {
+    Write-Host "Configuring GitHub environment '$($t.env)'..."
+    Invoke-Native { gh api --method PUT "repos/$Repo/environments/$($t.env)" } | Out-Null
+
+    $secrets = @{
+        AZURE_CLIENT_ID       = $clientId
+        AZURE_TENANT_ID       = $tenantId
+        AZURE_SUBSCRIPTION_ID = $t.sub
+    }
+    foreach ($name in $secrets.Keys) {
+        Invoke-Native { gh secret set $name --env $t.env --repo $Repo --body $secrets[$name] } | Out-Null
+        Write-Host "  set $name"
+    }
+}
+
+Write-Host "`nDone. Still to set manually per environment (output of your infra/ACR setup):"
+Write-Host "  AZURE_CONTAINER_REGISTRY_ENDPOINT, AZURE_MI_RESOURCE_ID"
+Write-Host "Add required reviewers on '$ProdEnvironment' in GitHub > Settings > Environments."
