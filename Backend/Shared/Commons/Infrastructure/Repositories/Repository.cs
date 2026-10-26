@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Commons.Infrastructure.Repositories;
 
+
+/// <summary>
+/// DbContext is a repository by itself, but using an IRepository restricts operations, same time is easier to mock for testing purposes.
+/// </summary>
+/// <typeparam name="TEntity"></typeparam>
 public interface IRepository<TEntity> where TEntity : AuditableEntity
 {
     IQueryable<TEntity> Entities { get; }

@@ -1,2 +1,59 @@
 {
+  "realm": "mountypython",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "customer", "description": "Customer: manages own orders, reads catalogs" },
+      { "name": "manager", "description": "Manager: manages all orders and catalogs" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "mountypython-client",
+      "name": "Mounty Python Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [ "http://localhost:4200/*", "https://localhost:4200/*" ],
+      "webOrigins": [ "+" ],
+      "attributes": { "pkce.code.challenge.method": "S256" }
+    }
+  ],
+  "users": [
+    {
+      "username": "TestUser1",
+      "enabled": true,
+      "email": "testuser1@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "User1",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "customer" ]
+    },
+    {
+      "username": "TestUser2",
+      "enabled": true,
+      "email": "testuser2@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "User2",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "customer" ]
+    },
+    {
+      "username": "TestManager",
+      "enabled": true,
+      "email": "testmanager@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Manager",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "manager" ]
+    }
+  ]
 }

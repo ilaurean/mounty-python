@@ -14,6 +14,8 @@ public class Program
 
         builder.SetupLogging();
 
+        builder.Services.SetupJsonDefaults();
+
         // Add services to the container.
         builder.Services.AddAuthentication().AddJwtBearer();
         builder.Services.AddAuthorization();

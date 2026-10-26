@@ -20,7 +20,7 @@ public sealed class Component : ValueObject
 
     public sealed class ComponentBuilder
     {
-        private readonly Component component = new();
+        private readonly Component component = new() { PK = Guid.NewGuid() };
 
         public ComponentBuilder WithName(string name) { component.Name = name; return this; }
         public ComponentBuilder WithDescription(string description) { component.Description = description; return this; }

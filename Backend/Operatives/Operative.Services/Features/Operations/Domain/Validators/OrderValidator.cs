@@ -17,7 +17,7 @@ public class BaseOrderValidator : Validator<Order, BaseOrderValidator>
             .MaximumLength(256).WithMessage($"{nameof(Order.CustomerID)} cannot exceed 256 characters long.");
         RuleFor(x => x.Items).NotEmpty().WithMessage($"{nameof(Order.Items)} is required.")
             .ForEach(y => y.SetValidator(OrderItemValidator.Instance));
-        RuleFor(x => x.CreateDate.Date).GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage($"{nameof(Order.CreateDate)} cannot be in the past days.");
+        RuleFor(x => x.OrderDate.Date).GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage($"{nameof(Order.OrderDate)} cannot be in the past days.");
     }
 }
 

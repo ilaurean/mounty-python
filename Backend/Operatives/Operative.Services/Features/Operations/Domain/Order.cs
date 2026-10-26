@@ -31,7 +31,7 @@ public sealed class Order : AuditableEntity
 
     public OrderStates Status { get; private set; } = OrderStates.Created;
 
-    public static OrderBuilder Create = new();
+    public static OrderBuilder Create => new();
 
     public void UpdateNameOrDescription(string? name, string? description)
     {
@@ -69,18 +69,20 @@ public sealed class Order : AuditableEntity
             PK = Guid.NewGuid(),
             ID = GenerateUniqueID(),
             CreateDate = DateTime.UtcNow,
+            OrderDate = DateTime.UtcNow,
         };
 
         public OrderBuilder WithName(string name) { order.Name = name; return this; }
         public OrderBuilder WithDescription(string description) { order.Description = description; return this; }
         public OrderBuilder WithCustomerID(string customerID) { order.CustomerID = customerID; return this; }
         public OrderBuilder WithItems(IList<OrderItem> items) { order.Items = items; return this; }
-        public OrderBuilder WithCreateDate(DateTime createDate) { order.CreateDate = createDate; return this; }
+        public OrderBuilder WithOrderDate(DateTime orderDate) { order.OrderDate = orderDate; return this; }
         public OrderBuilder WithStatus(OrderStates status) { order.Status = status; return this; }
 
         public Order Build()
         {
             BaseOrderValidator.Instance.ValidateAndThrow(order);
+            order.Events.Add(new OrderCreatedEvent(order.ToDTO()));
             return order;
         }
     }

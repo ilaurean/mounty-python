@@ -25,9 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Operations\Commands\" />
     <Folder Include="Features\Operations\Consumers\" />
-    <Folder Include="Features\Operations\Queries\" />
   </ItemGroup>
 
 </Project>

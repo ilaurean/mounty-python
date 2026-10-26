@@ -72,7 +72,7 @@ var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycl
 if (!isPublishing)
 {
     keycloak.WithDataVolume()
-        .WithRealmImport("keycloak")
+        .WithRealmImport("./import.json")
         // Mount the custom mountypython login theme into the Keycloak themes directory
         .WithBindMount("./keycloak/themes/mountypython", "/opt/keycloak/themes/mountypython", isReadOnly: true);
 }
