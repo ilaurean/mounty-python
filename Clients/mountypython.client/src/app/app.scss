@@ -1,0 +1,22 @@
+.logo {
+  height: 36px;
+  width: 36px;
+  margin-right: 8px;
+}
+
+.title {
+  margin-right: 24px;
+  font-weight: 500;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.user {
+  margin: 0 8px 0 4px;
+}
+
+.active {
+  background: rgba(255, 255, 255, 0.18);
+}

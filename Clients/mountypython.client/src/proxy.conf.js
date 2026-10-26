@@ -12,7 +12,18 @@ const operatives = env["services__operative-services__http__0"]
   ?? env["services__operative-services__https__0"]
   ?? 'https://localhost:5308';
 
-  const PROXY_CONFIG = [
+const keycloak = env["services__mountypython-keycloak__http__0"]
+  ?? env["services__mountypython-keycloak__https__0"]
+  ?? 'http://localhost:9001';
+
+const PROXY_CONFIG = [
+  {
+    context: ["/auth"],
+    target: keycloak,
+    secure: false,
+    changeOrigin: true,
+    pathRewrite: { "^/auth": "" }
+  },
   {
     context: ["/api/notifications", "/api/v1/updateshub"],
     target: notifications,

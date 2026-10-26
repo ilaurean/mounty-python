@@ -1,0 +1,78 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Boards</h1>
+    @if (auth.isManager) {
+      <button mat-flat-button color="primary" (click)="create()">
+        <mat-icon>add</mat-icon> New board
+      </button>
+    }
+  </div>
+
+  <form class="filters" (submit)="$event.preventDefault(); onSearch()">
+    <mat-form-field>
+      <mat-label>Board ID</mat-label>
+      <input matInput [formField]="searchForm.boardID" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [formField]="searchForm.name" />
+    </mat-form-field>
+    <button mat-stroked-button type="submit"><mat-icon>search</mat-icon> Search</button>
+  </form>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="boards()" class="full-width">
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let board">{{ board.id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let board">{{ board.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Description</th>
+        <td mat-cell *matCellDef="let board">{{ board.description }}</td>
+      </ng-container>
+      <ng-container matColumnDef="size">
+        <th mat-header-cell *matHeaderCellDef>Length x Width</th>
+        <td mat-cell *matCellDef="let board">{{ board.length ?? '-' }} x {{ board.width ?? '-' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="components">
+        <th mat-header-cell *matHeaderCellDef>Components</th>
+        <td mat-cell *matCellDef="let board">
+          @for (component of board.components; track component.pk) {
+            <div>{{ component.name }} (x{{ component.quantity }})</div>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let board" class="row-actions">
+          <button mat-icon-button (click)="edit(board)" aria-label="Edit board" matTooltip="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="remove(board)" aria-label="Delete board" matTooltip="Delete">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns()"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="columns().length">No boards found.</td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)" />
+</div>

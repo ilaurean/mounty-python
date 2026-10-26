@@ -1,0 +1,24 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 12px;
+  min-width: min(640px, 80vw);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.item-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+
+  mat-form-field {
+    flex: 1 1 0;
+  }
+
+  .qty {
+    flex: 0 0 100px;
+  }
+}

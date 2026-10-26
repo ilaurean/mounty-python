@@ -1,24 +1,19 @@
-﻿<h1 id="tableLabel">Weather forecast</h1>
-
-<p>This component demonstrates fetching data from the server.</p>
-
-<p *ngIf="!forecasts"><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationangular">https://aka.ms/jspsintegrationangular</a> for more details.</em></p>
-
-<table *ngIf="forecasts">
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let forecast of forecasts">
-            <td>{{ forecast.date }}</td>
-            <td>{{ forecast.temperatureC }}</td>
-            <td>{{ forecast.temperatureF }}</td>
-            <td>{{ forecast.summary }}</td>
-        </tr>
-    </tbody>
-</table>
+<mat-toolbar color="primary">
+  <img src="logo.svg" alt="Mounty Python" class="logo" />
+  <span class="title">Mounty Python</span>
+  <a mat-button routerLink="/operations" routerLinkActive="active">
+    <mat-icon>receipt_long</mat-icon> Orders
+  </a>
+  <a mat-button routerLink="/inventory" routerLinkActive="active">
+    <mat-icon>memory</mat-icon> Boards
+  </a>
+  <span class="spacer"></span>
+  <mat-icon aria-hidden="true">account_circle</mat-icon>
+  <span class="user">{{ auth.username }}</span>
+  <button mat-icon-button (click)="logout()" aria-label="Logout" title="Logout">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+<main>
+  <router-outlet />
+</main>
