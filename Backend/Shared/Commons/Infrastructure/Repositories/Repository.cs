@@ -37,6 +37,7 @@ public abstract class Repository<TEntity, TContext>(TContext context, IPublisher
             e.Events.Clear();
         }
 
+        // TODO: in case of lost messages, implement the Outbox-Pattern
         await context.SaveChangesAsync(cancellationToken);
 
         foreach (var e in events)

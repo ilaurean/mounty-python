@@ -9,8 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="13.6.4" />
     <PackageReference Include="FluentValidation" Version="12.2.0" />
-	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
-	<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
+	<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
+	<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.14" />
 	<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 	<PackageReference Include="Rebus" Version="8.9.5" />
 	<PackageReference Include="Scalar.AspNetCore" Version="2.18.3" />

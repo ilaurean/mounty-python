@@ -112,6 +112,7 @@ var webApp = builder.AddJavaScriptApp("mountypython-client", "../Clients/mountyp
     .WithReference(inventory).WaitFor(inventory)
     .WithReference(orders).WaitFor(orders)
     .WithReference(notifications).WaitFor(notifications)
+    .WithReference(keycloak).WaitFor(keycloak)
     .WithBuildScript("build")
     .WithEndpoint(endpointName: "http", endpoint =>
     {
