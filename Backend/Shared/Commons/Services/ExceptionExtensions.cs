@@ -49,6 +49,13 @@ public static class ExceptionExtensions
                         case NotFoundException:
                             context.Response.StatusCode = StatusCodes.Status404NotFound;
                             break;
+                        case UnauthorizedAccessException:
+                            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                            defaultResponseBody = JsonSerializer.Serialize(new
+                            {
+                                Message = exception.Message
+                            });
+                            break;
                         case BusinessException:
                             context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
                             break;

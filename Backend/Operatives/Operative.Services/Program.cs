@@ -1,3 +1,4 @@
+using Commons.Infrastructure.Messaging;
 using Commons.Infrastructure.Repositories;
 using Commons.Services;
 using FluentValidation;
@@ -13,10 +14,13 @@ builder.SetupLogging();
 
 builder.SetupNpgsqlServerDbContext<OperativeDbContext>("mountypython-operativedb");
 
+builder.Services.SetupJsonDefaults();
+
 // Add services to the container.
-builder.Services.AddAuthentication().AddJwtBearer();
-builder.Services.AddAuthorization();
+builder.Services.AddMountyJwtBearer(builder.Configuration, builder.Environment);
+builder.Services.AddMountyAuthorization();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddOperationsServices();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -26,8 +30,10 @@ builder.Services.AddRebus(cfg => cfg
     .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
     .Routing(r => r.TypeBased()));
 builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
+builder.Services.AddScoped<IPublisher, Publisher>();
 
 builder.Services.AddHostedService<MigratorHostedService<OperativeDbContext>>();
+//builder.Services.AddHostedService<OperativeWarmupHostedService>();
 
 var app = builder.Build();
 

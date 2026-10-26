@@ -19,7 +19,7 @@ public sealed class Board : ValueObject
 
     public class BoardBuilder
     {
-        private readonly Board board = new();
+        private readonly Board board = new() { PK = Guid.NewGuid() };
         public BoardBuilder WithID(string id) { board.ID = id; return this; }
         public BoardBuilder WithName(string name) { board.Name = name; return this; }
         public BoardBuilder WithComponents(IList<Component> components) { board.Components = components; return this; }

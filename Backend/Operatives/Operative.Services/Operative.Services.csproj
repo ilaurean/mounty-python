@@ -22,12 +22,11 @@
     <ProjectReference Include="..\..\..\MountyPython.ServiceDefaults\MountyPython.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Shared\Commons\Commons.csproj" />
     <ProjectReference Include="..\Operative.Contracts\Operative.Contracts.csproj" />
+    <ProjectReference Include="..\..\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Operations\Commands\" />
     <Folder Include="Features\Operations\Consumers\" />
-    <Folder Include="Features\Operations\Queries\" />
   </ItemGroup>
 
 </Project>

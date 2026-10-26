@@ -8,7 +8,7 @@ public interface IPublisher
     Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : DomainEvent;
 }
 
-public class Publiher(IBus bus) : IPublisher
+public class Publisher(IBus bus) : IPublisher
 {
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default) where T : DomainEvent
     {

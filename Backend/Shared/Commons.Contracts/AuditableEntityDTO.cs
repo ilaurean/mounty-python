@@ -12,4 +12,4 @@ public abstract record AuditableEntityDTO(
 
 public abstract record AggregateDTO(Guid PK) : ValueObjectDTO(PK);
 
-public abstract record FilterDTO;
+public abstract record FilterDTO(int? pageIndex, int? pageSize);

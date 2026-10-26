@@ -7,5 +7,8 @@ public record OrderFilterDTO(
     string? Name,
     string? CustomerID,
     OrderStates? State,
-    string? BoardID) : FilterDTO
+    string? BoardID,
+    int? pageIndex = 0,
+    int? pageSize = 20
+    ) : FilterDTO(pageIndex, pageSize)
 { }

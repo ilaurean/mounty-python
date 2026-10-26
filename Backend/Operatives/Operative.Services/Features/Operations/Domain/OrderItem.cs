@@ -19,7 +19,7 @@ public sealed class OrderItem : ValueObject
 
     public class OrderItemBuilder
     {
-        private readonly OrderItem orderItem = new();
+        private readonly OrderItem orderItem = new() { PK = Guid.NewGuid() };
         public OrderItemBuilder WithPosition(int position) { orderItem.Position = position; return this; }
         public OrderItemBuilder WithBoard(Board board) { orderItem.Board = board; return this; }
         public OrderItemBuilder WithQuantity(int quantity) { orderItem.Quantity = quantity; return this; }
