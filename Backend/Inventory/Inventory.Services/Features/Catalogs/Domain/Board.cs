@@ -8,10 +8,6 @@ namespace Inventory.Services.Features.Catalogs.Domain;
 public sealed class Board : AuditableEntity
 {
     [Required]
-    [StringLength(10)]
-    public string ID { get; private set; }
-
-    [Required]
     [StringLength(128)]
     public string Name { get; private set; }
 
