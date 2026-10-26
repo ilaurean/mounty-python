@@ -24,6 +24,7 @@
     </Project>
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path="bootstrap.ps1" />
     <File Path="README.md" />
     <File Path="Solution Items/ChipHappens.jpg" />
     <File Path="Solution Items/Coding_Challenge_EN.pdf" />

@@ -133,6 +133,5 @@ foreach ($t in $targets) {
     }
 }
 
-Write-Host "`nDone. Still to set manually per environment (output of your infra/ACR setup):"
-Write-Host "  AZURE_CONTAINER_REGISTRY_ENDPOINT, AZURE_MI_RESOURCE_ID"
+Write-Host "`nDone."
 Write-Host "Add required reviewers on '$ProdEnvironment' in GitHub > Settings > Environments."
