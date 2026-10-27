@@ -33,6 +33,10 @@ builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 builder.Services.AddScoped<IPublisher, Publisher>();
 
 builder.Services.AddHostedService<MigratorHostedService<InventoryDbContext>>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<InventorySeedHostedService>();
+}
 //builder.Services.AddHostedService<InventoryWarmupHostedService>();
 
 var app = builder.Build();

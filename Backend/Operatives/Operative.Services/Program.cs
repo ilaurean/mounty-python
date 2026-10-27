@@ -33,6 +33,10 @@ builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 builder.Services.AddScoped<IPublisher, Publisher>();
 
 builder.Services.AddHostedService<MigratorHostedService<OperativeDbContext>>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<OperativeSeedHostedService>();
+}
 //builder.Services.AddHostedService<OperativeWarmupHostedService>();
 
 var app = builder.Build();

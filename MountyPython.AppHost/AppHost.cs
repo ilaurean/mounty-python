@@ -1,3 +1,5 @@
+using Aspire.Hosting.Yarp.Transforms;
+
 var builder = DistributedApplication.CreateBuilder(args);
 var isPublishing = builder.ExecutionContext.IsPublishMode;
 
@@ -123,6 +125,7 @@ var webApp = builder.AddJavaScriptApp("mountypython-client", "../Clients/mountyp
     {
         endpoint.UriScheme = "http";
         endpoint.TargetPort = isPublishing ? null : 4200;
+        endpoint.IsProxied = isPublishing;
     });
 
 if (isPublishing)
@@ -134,7 +137,8 @@ if (isPublishing)
         .WithReference(notifications).WaitFor(notifications)
         .WithConfiguration(config =>
         {
-            config.AddRoute("/auth/{**catch-all}", keycloak);
+            config.AddRoute("/auth/{**catch-all}", keycloak)
+                .WithTransformPathRemovePrefix("/auth");
             config.AddRoute("/resources/{**catch-all}", keycloak);
             config.AddRoute("/realms/{**catch-all}", keycloak);
             config.AddRoute("/js/{**catch-all}", keycloak);
@@ -142,12 +146,12 @@ if (isPublishing)
             config.AddRoute("/admin/{**catch-all}", keycloak);
 
             config.AddRoute("/api/catalogs/{**catch-all}", inventory);
-            config.AddRoute("/api/opertions/{**catch-all}", orders);
+            config.AddRoute("/api/operations/{**catch-all}", orders);
 
             config.AddRoute("/api/notifications/{**catch-all}", notifications);
             config.AddRoute("/api/v1/updateshub/{**catch-all}", notifications);
         })
-        //.WithExternalHttpEndpoints()
+        .WithExternalHttpEndpoints()
         .PublishWithStaticFiles(webApp);
 }
 
