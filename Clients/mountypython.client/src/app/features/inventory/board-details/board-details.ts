@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Board } from '../../../core/models';
+import { BoardDetailsData } from '../../../core/models';
 
 @Component({
   selector: 'app-board-details',
@@ -8,5 +8,5 @@ import { Board } from '../../../core/models';
   templateUrl: './board-details.html'
 })
 export class BoardDetails {
-  protected readonly board = inject<{ board: Board }>(MAT_DIALOG_DATA).board;
+  protected readonly board = inject<BoardDetailsData>(MAT_DIALOG_DATA).board;
 }

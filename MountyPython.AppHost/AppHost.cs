@@ -3,7 +3,7 @@ using Aspire.Hosting.Yarp.Transforms;
 var builder = DistributedApplication.CreateBuilder(args);
 var isPublishing = builder.ExecutionContext.IsPublishMode;
 
-var containerName = "mounthypython-" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "prod" : "dev");
+var containerName = "mountypython-" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "prod" : "dev");
 var aca = builder.AddAzureContainerAppEnvironment(containerName);
 
 var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
@@ -11,14 +11,14 @@ var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
     {
         c.WithImageTag("18-alpine")
             .WithHostPort(5432)
-            .WithDataVolume("mounthypython-postgres-data")
+            .WithDataVolume("mountypython-postgres-data")
             .WithLifetime(ContainerLifetime.Persistent)
-            .WithContainerName("mounthypython-postgres-container")
+            .WithContainerName("mountypython-postgres-container")
             .WithPgAdmin(pgAdmin =>
             {
                 pgAdmin.WithHostPort(5050);
                 pgAdmin.WithLifetime(ContainerLifetime.Persistent);
-                pgAdmin.WithContainerName("mounthypython-pgadmin-container");
+                pgAdmin.WithContainerName("mountypython-pgadmin-container");
             });
     });
 
@@ -30,7 +30,7 @@ if (isPublishing)
 var messages = builder.AddRabbitMQ("rabbit")
     .WithManagementPlugin()
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithContainerName("mounthypython-rabbit-container")
+    .WithContainerName("mountypython-rabbit-container")
     .PublishAsContainer();
 
 var keycloakAdmin = builder.AddParameter("keycloak-admin", secret: false, value: "admin");
@@ -40,8 +40,8 @@ int? keycloakPort = isPublishing ? null : 9001;
 var keycloakDatabaseName = "mountypython_Keycloak" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "" : "_DEV");
 //configure keycloak +aspire + sqlserver: https://github.com/dotnet/aspire/discussions/6563
 var keycloakDbResource = postgres.AddDatabase("mountypython-keycloakdb", keycloakDatabaseName);
-
 var keycloakDbUrl = ReferenceExpression.Create($"jdbc:postgresql://{postgres.Resource.HostName}/{keycloakDbResource.Resource.DatabaseName}");
+
 var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycloakAdmin, adminPassword: keycloakPassword, port: keycloakPort)
     .WithImageTag("26.8")
     .WithEnvironment("KC_DB", "postgres")

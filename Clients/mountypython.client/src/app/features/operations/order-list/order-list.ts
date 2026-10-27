@@ -5,8 +5,8 @@ import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
 import { filter as filterOperator } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
-import { ORDER_STATUSES, Order, OrderStatus } from '../../../core/models';
-import { ConfirmDialog } from '../../../shared/confirm-dialog';
+import { ORDER_STATUSES, Order, OrderDetailsData, OrderSearch, OrderStatus } from '../../../core/models';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { OrderDetails } from '../order-details/order-details';
 import { OrderForm, OrderFormData, OrderFormResult } from '../order-form/order-form';
 import { OrdersApi } from '../orders.api';
@@ -28,7 +28,10 @@ export class OrderList implements OnInit {
   protected readonly loading = this.store.selectSignal(ordersFeature.selectLoading);
   protected readonly currentFilter = this.store.selectSignal(ordersFeature.selectFilter);
 
-  protected readonly search = signal({ name: '', state: '' });
+  protected readonly search = signal<OrderSearch>({
+    name: this.currentFilter().name ?? '',
+    state: this.currentFilter().state ?? ''
+  });
   protected readonly searchForm = form(this.search);
 
   protected readonly pageSize = computed(() => this.currentFilter().pageSize ?? 20);
@@ -49,7 +52,7 @@ export class OrderList implements OnInit {
   ]);
 
   ngOnInit(): void {
-    this.load(0, this.pageSize());
+    this.load(this.pageIndex(), this.pageSize());
   }
 
   protected load(pageIndex: number, pageSize: number): void {
@@ -72,7 +75,7 @@ export class OrderList implements OnInit {
   }
 
   protected details(order: Order): void {
-    this.dialog.open(OrderDetails, { data: { order }, width: '600px' });
+    this.dialog.open<OrderDetails, OrderDetailsData>(OrderDetails, { data: { order }, width: '600px' });
   }
 
   protected create(): void {
@@ -101,7 +104,7 @@ export class OrderList implements OnInit {
 
   protected cancel(order: Order): void {
     this.dialog
-      .open<ConfirmDialog, { title: string; message: string }, boolean>(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         data: { title: 'Cancel order', message: `Cancel order "${order.name}"?` }
       })
       .afterClosed()

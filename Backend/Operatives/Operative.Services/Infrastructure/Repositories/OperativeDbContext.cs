@@ -7,6 +7,11 @@ namespace Operative.Services.Infrastructure.Repositories;
 public class OperativeDbContext(DbContextOptions<OperativeDbContext> options) : DbContext(options)
 {
     public DbSet<Order> Orders => Set<Order>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasPostgresExtension("unaccent");
+    }
 }
 
 public class OperativeDbContextFactory : IDesignTimeDbContextFactory<OperativeDbContext>

@@ -7,6 +7,11 @@ namespace Inventory.Services.Infrastructure.Repositories;
 public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : DbContext(options)
 {
     public DbSet<Board> Orders => Set<Board>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasPostgresExtension("unaccent");
+    }
 }
 
 public class InventoryDbContextFactory : IDesignTimeDbContextFactory<InventoryDbContext>

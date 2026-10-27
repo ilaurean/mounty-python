@@ -75,11 +75,40 @@ export interface OrderFilter {
   pageSize?: number;
 }
 
+export interface OrderItemComponentRequest {
+  name: string;
+  quantity: number;
+}
+
 export interface CreateOrderItemRequest {
   boardID: string;
   boardName: string;
   quantity: number;
-  components: { name: string; quantity: number }[];
+  components: OrderItemComponentRequest[];
+}
+
+export interface AuthTokens {
+  token?: string;
+  refreshToken?: string;
+  idToken?: string;
+}
+
+export interface BoardSearch {
+  name: string;
+  boardID: string;
+}
+
+export interface OrderSearch {
+  name: string;
+  state: OrderStatus | '';
+}
+
+export interface BoardDetailsData {
+  board: Board;
+}
+
+export interface OrderDetailsData {
+  order: Order;
 }
 
 export interface CreateOrderRequest {

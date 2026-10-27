@@ -25,6 +25,12 @@ const PROXY_CONFIG = [
     pathRewrite: { "^/auth": "" }
   },
   {
+    context: ["/resources", "/realms", "/js", "/themes"],
+    target: keycloak,
+    secure: false,
+    changeOrigin: true
+  },
+  {
     context: ["/api/notifications", "/api/v1/updateshub"],
     target: notifications,
     secure: false,

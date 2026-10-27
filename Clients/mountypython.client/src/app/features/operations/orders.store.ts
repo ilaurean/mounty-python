@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createActionGroup, createFeature, createReducer, emptyProps, on, props } from '@ngrx/store';
-import { Observable, catchError, map, mergeMap, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
+import { loadSession, saveSession } from '../../core/session-storage';
 import { CreateOrderRequest, Order, OrderFilter, UpdateOrderRequest } from '../../core/models';
 import { OrdersApi } from './orders.api';
 
@@ -14,7 +15,7 @@ export interface OrdersState {
 export const initialOrdersState: OrdersState = {
   orders: [],
   loading: false,
-  filter: { pageIndex: 0, pageSize: 20 }
+  filter: loadSession<OrderFilter>('orders.filter', { pageIndex: 0, pageSize: 20 })
 };
 
 export const ordersActions = createActionGroup({
@@ -63,6 +64,15 @@ export class OrdersEffects {
         )
       )
     )
+  );
+
+  readonly persistFilter$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(ordersActions.load),
+        tap(({ filter }) => saveSession('orders.filter', filter))
+      ),
+    { dispatch: false }
   );
 
   readonly create$ = createEffect(() =>

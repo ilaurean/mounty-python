@@ -23,7 +23,7 @@ public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQue
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            query = query.Where(x => x.Name.Contains(filter.Name));
+            query = query.Where(x => EF.Functions.ILike(EF.Functions.Unaccent(x.Name), EF.Functions.Unaccent("%" + filter.Name + "%")));
         }
 
         IList<BoardDTO> result = query
