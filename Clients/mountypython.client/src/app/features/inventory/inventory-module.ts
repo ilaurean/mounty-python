@@ -3,14 +3,15 @@ import { RouterModule, Routes } from '@angular/router';
 import { provideEffects } from '@ngrx/effects';
 import { provideState } from '@ngrx/store';
 import { SharedModule } from '../../shared/shared-module';
-import { BoardForm } from './board-form';
-import { BoardList } from './board-list';
+import { BoardDetails } from './board-details/board-details';
+import { BoardForm } from './board-form/board-form';
+import { BoardList } from './board-list/board-list';
 import { BoardsEffects, boardsFeature } from './boards.store';
 
 const routes: Routes = [{ path: '', component: BoardList }];
 
 @NgModule({
-  declarations: [BoardList, BoardForm],
+  declarations: [BoardList, BoardForm, BoardDetails],
   imports: [SharedModule, RouterModule.forChild(routes)],
   providers: [provideState(boardsFeature), provideEffects(BoardsEffects)]
 })

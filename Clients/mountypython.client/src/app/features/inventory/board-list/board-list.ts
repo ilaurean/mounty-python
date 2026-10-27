@@ -4,11 +4,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
 import { filter as filterOperator } from 'rxjs';
-import { AuthService } from '../../core/auth.service';
-import { Board, CreateBoardRequest } from '../../core/models';
-import { ConfirmDialog } from '../../shared/confirm-dialog';
-import { BoardForm } from './board-form';
-import { boardsActions, boardsFeature } from './boards.store';
+import { AuthService } from '../../../core/auth.service';
+import { Board, CreateBoardRequest } from '../../../core/models';
+import { ConfirmDialog } from '../../../shared/confirm-dialog';
+import { BoardDetails } from '../board-details/board-details';
+import { BoardForm } from '../board-form/board-form';
+import { boardsActions, boardsFeature } from '../boards.store';
 
 @Component({
   selector: 'app-board-list',
@@ -55,6 +56,10 @@ export class BoardList implements OnInit {
 
   protected onPage(event: PageEvent): void {
     this.load(event.pageIndex, event.pageSize);
+  }
+
+  protected details(board: Board): void {
+    this.dialog.open(BoardDetails, { data: { board }, width: '600px' });
   }
 
   protected create(): void {

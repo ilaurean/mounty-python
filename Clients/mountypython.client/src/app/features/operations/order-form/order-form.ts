@@ -1,8 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { applyEach, form, min, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Board, CreateOrderRequest, Order, UpdateOrderRequest } from '../../core/models';
-import { BoardsApi } from '../inventory/boards.api';
+import { Board, CreateOrderRequest, Order, UpdateOrderRequest } from '../../../core/models';
+import { BoardsApi } from '../../inventory/board-list/boards.api';
 
 export interface OrderFormData {
   order?: Order;

@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../core/models';
+import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../../core/models';
 
 @Injectable({ providedIn: 'root' })
 export class BoardsApi {

@@ -3,7 +3,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createActionGroup, createFeature, createReducer, emptyProps, on, props } from '@ngrx/store';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../core/models';
-import { BoardsApi } from './boards.api';
+import { BoardsApi } from './board-list/boards.api';
 
 export interface BoardsState {
   boards: Board[];

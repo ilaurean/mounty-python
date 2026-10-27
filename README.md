@@ -89,15 +89,16 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 - Due Aspire: 3 Microservices (2 for Business, 1 for Notifications) instead of 1 Monolith
 - Frontend: TypeScript, Angular, Angular Material, Signal-Forms for simplicity and efficiency, NgRx - State Management
 - E2E Test: Playwright if time allows
-- First steps in reliable services: Aspire.ServiceDefaults add retry policy, circuit-breaker, timeout, logging, metrics, health-checks, etc.
+- First steps in reliable services: Aspire.ServiceDefaults add retry policy, fail-fast, circuit-breaker, timeout, logging, metrics, health-checks, etc.
 - Self-Written map to DTO instead of AutoMapper due to license costs, and simplicity
+- Monitoring: OpenTelemetry, Azure Insights
 
 ### Automatic Build & Deployment, Quality Gates:
 - GitHub Actions with 2 branches (main & dev-branch), dev-branch deploys on dev, main deploys on prod
 - Automatic versioning and tagging during build and deployment
 - Automatic tests using Microsoft Test Platform (MTP) and XUnit v3 - MTP v2
 - Playwright for E2E tests in pipeline if time allows
-- Provisioning of Azure is maintained by Aspire (no manual interventions) - if time allows, a horizantal scalability will be provided
+- Provisioning of Azure is maintained by Aspire (no manual interventions) - if time allows, a horizontal scalability will be provided
 
 ### Operations:
 - The User/Customer should be able to see the available boards and components, create or cancel an order, see only his/her orders.
@@ -107,12 +108,20 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 ## Plan
 1. Define the resources (ACA, PostgreSQL, RabbitMQ, Keycloak, Yarp) in AppHost for the infrastructure.
 2. Create project structure, with 3 microservices (2 for Business, 1 for Notifications) and a frontend project.
-3. Create shared library for common models, DTOs, and utilities (Logging, Repository, Messaging, etc.).
+3. Create shared library for common models, DTOs, and utilities (Logging, Repository, Messaging, Security, etc.).
 4. Define the Domain Models, Validators and the Actions of the domain.
 5. Implement placeholder for endpoints in the backend services.
-6. Create Github repository and define the CI/CD Actions
-7. Add documentation (README.md), add skills, instruct copilot
-8. Implement backend services (maybe without authentication), make the requsts idempotent
-9. Implement frontend (maybe without authentication)
-10. Define the Realm in Keycloak and register the test users
-11. Configure Yarp: request limits, CORS, etc.: this should be the first task before publishing
+6. Create Github repository and define the CI/CD Actions.
+7. Add documentation (README.md), add skills, instruct copilot.
+8. Implement backend services (maybe without authentication), make the requsts idempotent.
+9. Implement frontend (maybe without authentication).
+10. Define the Realm in Keycloak and register the test users.
+11. Configure Yarp: request limits, CORS, etc.: this should be the first task before publishing.
+
+## Known issues
+- HIGH: security, default password for keycloak-admin in code
+- HIGH: security, realm with test users in versioning systems
+- HIGH: Lots of bugs and functionality breaks
+- HIGH: Frontend Container in Azure ACA not reachable
+- MEDIUM: inssuficient automatic tests: registering eventsource and consumers
+-

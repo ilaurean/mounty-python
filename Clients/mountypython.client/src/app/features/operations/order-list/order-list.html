@@ -66,7 +66,7 @@
       </ng-container>
       <ng-container matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let order" class="row-actions">
+        <td mat-cell *matCellDef="let order" class="row-actions" (click)="$event.stopPropagation()">
           @if (canChange(order)) {
             <button mat-icon-button (click)="edit(order)" aria-label="Edit order" matTooltip="Edit">
               <mat-icon>edit</mat-icon>
@@ -93,7 +93,7 @@
         </td>
       </ng-container>
       <tr mat-header-row *matHeaderRowDef="columns()"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns()"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns()" class="clickable-row" (click)="details(row)"></tr>
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="columns().length">No orders found.</td>
       </tr>

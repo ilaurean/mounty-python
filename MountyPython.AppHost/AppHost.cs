@@ -138,7 +138,7 @@ if (isPublishing)
         .WithConfiguration(config =>
         {
             config.AddRoute("/auth/{**catch-all}", keycloak)
-            .WithTransformPathRemovePrefix("/auth");
+                .WithTransformPathRemovePrefix("/auth");
             config.AddRoute("/resources/{**catch-all}", keycloak);
             config.AddRoute("/realms/{**catch-all}", keycloak);
             config.AddRoute("/js/{**catch-all}", keycloak);

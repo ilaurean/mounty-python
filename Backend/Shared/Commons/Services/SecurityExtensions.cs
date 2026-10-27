@@ -39,8 +39,8 @@ public static class SecurityExtensions
                 options.Audience = audience;
                 options.RequireHttpsMetadata = !environment.IsDevelopment();
                 options.MapInboundClaims = false;
-                options.TokenValidationParameters.ValidateIssuer = true;
-                options.TokenValidationParameters.ValidateAudience = true;
+                options.TokenValidationParameters.ValidateIssuer = !environment.IsDevelopment();
+                options.TokenValidationParameters.ValidateAudience = !environment.IsDevelopment();
                 options.TokenValidationParameters.NameClaimType = "preferred_username";
                 options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
             });

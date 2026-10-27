@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { applyEach, disabled, form, min, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Board, ComponentRequest, CreateBoardRequest } from '../../core/models';
+import { Board, ComponentRequest, CreateBoardRequest } from '../../../core/models';
 
 export interface BoardFormData {
   board?: Board;

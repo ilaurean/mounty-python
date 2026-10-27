@@ -4,12 +4,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
 import { filter as filterOperator } from 'rxjs';
-import { AuthService } from '../../core/auth.service';
-import { ORDER_STATUSES, Order, OrderStatus } from '../../core/models';
-import { ConfirmDialog } from '../../shared/confirm-dialog';
-import { OrderForm, OrderFormData, OrderFormResult } from './order-form';
-import { OrdersApi } from './orders.api';
-import { ordersActions, ordersFeature } from './orders.store';
+import { AuthService } from '../../../core/auth.service';
+import { ORDER_STATUSES, Order, OrderStatus } from '../../../core/models';
+import { ConfirmDialog } from '../../../shared/confirm-dialog';
+import { OrderDetails } from '../order-details/order-details';
+import { OrderForm, OrderFormData, OrderFormResult } from '../order-form/order-form';
+import { OrdersApi } from '../orders.api';
+import { ordersActions, ordersFeature } from '../orders.store';
 
 @Component({
   selector: 'app-order-list',
@@ -68,6 +69,10 @@ export class OrderList implements OnInit {
 
   protected canChange(order: Order): boolean {
     return order.status === 'Created';
+  }
+
+  protected details(order: Order): void {
+    this.dialog.open(OrderDetails, { data: { order }, width: '600px' });
   }
 
   protected create(): void {
