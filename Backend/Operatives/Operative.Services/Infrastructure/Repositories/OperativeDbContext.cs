@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Commons.Infrastructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Operative.Services.Features.Operations.Domain;
 
@@ -10,7 +11,7 @@ public class OperativeDbContext(DbContextOptions<OperativeDbContext> options) : 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("unaccent");
+        modelBuilder.UseUnaccent();
     }
 }
 

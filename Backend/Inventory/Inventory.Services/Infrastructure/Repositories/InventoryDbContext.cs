@@ -1,4 +1,5 @@
-﻿using Inventory.Services.Features.Catalogs.Domain;
+﻿using Commons.Infrastructure.Repositories;
+using Inventory.Services.Features.Catalogs.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -10,7 +11,7 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasPostgresExtension("unaccent");
+        modelBuilder.UseUnaccent();
     }
 }
 
