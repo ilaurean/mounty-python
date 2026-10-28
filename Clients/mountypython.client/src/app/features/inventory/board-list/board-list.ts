@@ -62,12 +62,12 @@ export class BoardList implements OnInit {
   }
 
   protected details(board: Board): void {
-    this.dialog.open<BoardDetails, BoardDetailsData>(BoardDetails, { data: { board }, width: '600px' });
+    this.dialog.open<BoardDetails, BoardDetailsData>(BoardDetails, { data: { board }, panelClass: 'app-dialog' });
   }
 
   protected create(): void {
     this.dialog
-      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: {} })
+      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: {}, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((request): request is CreateBoardRequest => !!request))
       .subscribe(request => this.store.dispatch(boardsActions.create({ request })));
@@ -75,7 +75,7 @@ export class BoardList implements OnInit {
 
   protected edit(board: Board): void {
     this.dialog
-      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: { board } })
+      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: { board }, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((request): request is CreateBoardRequest => !!request))
       .subscribe(({ id: _id, ...request }) => this.store.dispatch(boardsActions.update({ id: board.id, request })));

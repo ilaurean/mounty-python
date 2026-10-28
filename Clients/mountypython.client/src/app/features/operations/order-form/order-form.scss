@@ -1,8 +1,11 @@
+mat-form-field {
+  width: 100%;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 0 12px;
-  min-width: min(640px, 80vw);
 }
 
 .wide {
@@ -10,15 +13,42 @@
 }
 
 .item-row {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  align-items: start;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
 
-  mat-form-field {
-    flex: 1 1 0;
+  .board {
+    grid-column: 1 / -1;
   }
 
   .qty {
-    flex: 0 0 100px;
+    grid-column: 1;
+  }
+
+  button {
+    grid-column: 2;
+    margin-top: 8px;
+  }
+}
+
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .item-row {
+    grid-template-columns: 1fr 120px auto;
+    border-bottom: 0;
+    margin-bottom: 0;
+
+    .board,
+    .qty,
+    button {
+      grid-column: auto;
+    }
   }
 }

@@ -118,6 +118,21 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 10. Define the Realm in Keycloak and register the test users.
 11. Configure Yarp: request limits, CORS, etc.: this should be the first task before publishing.
 
+## Parameters (AppHost), usually as user secrets
+{
+  "Resources:rabbit:tcp:port": "31895",
+  "Resources:rabbit:management:port": "31896",
+  "Resources:mountypython-keycloak:management:port": "30367",
+  "Resources:mounthyphython-message:tcp:port": "16893",
+  "Resources:mounthyphython-message:management:port": "16894",
+  "Parameters:rabbit-password": "",
+  "Parameters:postgres-password": "",
+  "Parameters:mounthyphython-message-password": "",
+  "Aspire:VersionCheck:LastCheckDate": "2026-10-28T13:51:00.1089011+00:00",
+  "AppHost:OtlpApiKey": "",
+  "AppHost:DashboardApiKey": ""
+}
+
 ## Known issues
 - HIGH: security, default password for keycloak-admin in code
 - HIGH: security, realm with test users in versioning systems

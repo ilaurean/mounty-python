@@ -103,8 +103,7 @@ export class OrderList implements OnInit {
   private show(order: Order, mode: OrderViewMode): void {
     this.store.dispatch(ordersActions.close());
     if (mode === 'details') {
-      this.dialog.open<OrderDetails, OrderDetailsData>(OrderDetails, { data: { order }, width: '600px' });
-      return;
+      this.dialog.open<OrderDetails, OrderDetailsData>(OrderDetails, { data: { order }, panelClass: 'app-dialog' });      return;
     }
     this.openForm({ order }).subscribe(result => {
       if (result.update) {
@@ -147,7 +146,7 @@ export class OrderList implements OnInit {
 
   private openForm(data: OrderFormData) {
     return this.dialog
-      .open<OrderForm, OrderFormData, OrderFormResult>(OrderForm, { data })
+      .open<OrderForm, OrderFormData, OrderFormResult>(OrderForm, { data, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((result): result is OrderFormResult => !!result));
   }

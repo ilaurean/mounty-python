@@ -21,7 +21,7 @@
     <h3>Boards</h3>
     @for (item of orderForm.items; track $index) {
       <div class="item-row">
-        <mat-form-field>
+        <mat-form-field class="board">
           <mat-label>Board</mat-label>
           <select matNativeControl [formField]="item.boardID">
             <option value=""></option>
