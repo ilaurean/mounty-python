@@ -26,9 +26,10 @@ builder.Services.AddOperationsServices();
 builder.Services.AddOpenApi();
 
 var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
-builder.Services.AddRebus(cfg => cfg
-    .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
-    .Routing(r => r.TypeBased()));
+builder.Services.AddRebus(
+    cfg => cfg
+        .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
+        .Routing(r => r.TypeBased()));
 builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 builder.Services.AddScoped<IPublisher, Publisher>();
 

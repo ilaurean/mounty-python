@@ -1,4 +1,5 @@
-﻿using Inventory.Services.Features.Catalogs.Domain;
+﻿using Commons.Infrastructure.Repositories;
+using Inventory.Services.Features.Catalogs.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -7,6 +8,11 @@ namespace Inventory.Services.Infrastructure.Repositories;
 public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : DbContext(options)
 {
     public DbSet<Board> Orders => Set<Board>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.UseUnaccent();
+    }
 }
 
 public class InventoryDbContextFactory : IDesignTimeDbContextFactory<InventoryDbContext>

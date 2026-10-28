@@ -5,10 +5,10 @@ import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
 import { filter as filterOperator } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
-import { Board, CreateBoardRequest } from '../../../core/models';
-import { ConfirmDialog } from '../../../shared/confirm-dialog';
+import { Board, BoardDetailsData, BoardSearch, CreateBoardRequest } from '../../../core/models';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { BoardDetails } from '../board-details/board-details';
-import { BoardForm } from '../board-form/board-form';
+import { BoardForm, BoardFormData } from '../board-form/board-form';
 import { boardsActions, boardsFeature } from '../boards.store';
 
 @Component({
@@ -25,7 +25,10 @@ export class BoardList implements OnInit {
   protected readonly loading = this.store.selectSignal(boardsFeature.selectLoading);
   protected readonly currentFilter = this.store.selectSignal(boardsFeature.selectFilter);
 
-  protected readonly search = signal({ name: '', boardID: '' });
+  protected readonly search = signal<BoardSearch>({
+    name: this.currentFilter().name ?? '',
+    boardID: this.currentFilter().boardID ?? ''
+  });
   protected readonly searchForm = form(this.search);
 
   protected readonly pageSize = computed(() => this.currentFilter().pageSize ?? 20);
@@ -42,7 +45,7 @@ export class BoardList implements OnInit {
   );
 
   ngOnInit(): void {
-    this.load(0, this.pageSize());
+    this.load(this.pageIndex(), this.pageSize());
   }
 
   protected load(pageIndex: number, pageSize: number): void {
@@ -59,12 +62,12 @@ export class BoardList implements OnInit {
   }
 
   protected details(board: Board): void {
-    this.dialog.open(BoardDetails, { data: { board }, width: '600px' });
+    this.dialog.open<BoardDetails, BoardDetailsData>(BoardDetails, { data: { board }, panelClass: 'app-dialog' });
   }
 
   protected create(): void {
     this.dialog
-      .open<BoardForm, { board?: Board }, CreateBoardRequest>(BoardForm, { data: {} })
+      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: {}, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((request): request is CreateBoardRequest => !!request))
       .subscribe(request => this.store.dispatch(boardsActions.create({ request })));
@@ -72,7 +75,7 @@ export class BoardList implements OnInit {
 
   protected edit(board: Board): void {
     this.dialog
-      .open<BoardForm, { board?: Board }, CreateBoardRequest>(BoardForm, { data: { board } })
+      .open<BoardForm, BoardFormData, CreateBoardRequest>(BoardForm, { data: { board }, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((request): request is CreateBoardRequest => !!request))
       .subscribe(({ id: _id, ...request }) => this.store.dispatch(boardsActions.update({ id: board.id, request })));
@@ -80,7 +83,7 @@ export class BoardList implements OnInit {
 
   protected remove(board: Board): void {
     this.dialog
-      .open<ConfirmDialog, { title: string; message: string; confirmLabel: string }, boolean>(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         data: { title: 'Delete board', message: `Delete board "${board.name}"?`, confirmLabel: 'Delete' }
       })
       .afterClosed()

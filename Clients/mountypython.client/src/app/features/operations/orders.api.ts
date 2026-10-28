@@ -1,21 +1,25 @@
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateOrderRequest, Order, OrderFilter, UpdateOrderRequest } from '../../core/models';
+import { CreateOrderRequest, Order, OrderAggregate, OrderFilter, UpdateOrderRequest } from '../../core/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersApi {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/operations/orders';
 
-  search(filter: OrderFilter): Observable<Order[]> {
+  search(filter: OrderFilter): Observable<OrderAggregate[]> {
     let params = new HttpParams();
     for (const [key, value] of Object.entries(filter)) {
       if (value !== undefined && value !== null && value !== '') {
         params = params.set(key, String(value));
       }
     }
-    return this.http.get<Order[]>(this.baseUrl, { params });
+    return this.http.get<OrderAggregate[]>(this.baseUrl, { params });
+  }
+
+  get(id: string): Observable<Order> {
+    return this.http.get<Order>(this.url(id));
   }
 
   create(request: CreateOrderRequest): Observable<Order> {

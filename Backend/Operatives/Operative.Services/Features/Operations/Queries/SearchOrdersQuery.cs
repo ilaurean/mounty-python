@@ -1,3 +1,4 @@
+using Commons.Infrastructure.Repositories;
 using Commons.Services;
 using Microsoft.EntityFrameworkCore;
 using Operative.Contracts;
@@ -27,7 +28,8 @@ public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            query = query.Where(x => x.Name.Contains(filter.Name));
+            var term = SearchFunctions.NormalizeTerm(filter.Name);
+                        query = query.Where(x => SearchFunctions.Unaccent(x.Name).ToLower().Contains(term));
         }
 
         if (currentUser.isManager && !string.IsNullOrWhiteSpace(filter.CustomerID))
@@ -46,6 +48,9 @@ public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
         }
 
         var orders = query
+             .Include(x => x.Items)
+                .ThenInclude(y => y.Board)
+                .ThenInclude(z => z.Components)
             .OrderByDescending(x => x.OrderDate).ThenBy(x => x.Name)
             .Skip(filter.pageIndex ?? 0)
             .Take(filter.pageSize ?? 20)

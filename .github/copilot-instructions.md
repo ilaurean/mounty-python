@@ -55,6 +55,7 @@
 - Ask before changing the Domain Models.
 
 ## Frontend Conventions
+- design: mobile-first, desktop-second
 - use Signal-Forms for forms, and use NgRx for state management.
 - The frontend should be structured in a way that separates concerns and promotes maintainability.
 - The frontend should reflect the backend's vertical slice architecture, with feature modules corresponding to backend services.

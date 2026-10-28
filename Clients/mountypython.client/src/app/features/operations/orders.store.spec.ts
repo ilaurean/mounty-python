@@ -1,5 +1,5 @@
-import { Order } from '../../core/models';
-import { initialOrdersState, ordersActions, ordersFeature, upsertOrder } from './orders.store';
+import { Order, OrderAggregate } from '../../core/models';
+import { initialOrdersState, ordersActions, ordersFeature, toOrderAggregate, upsertOrder } from './orders.store';
 
 const order = (id: string, status: Order['status'] = 'Created'): Order => ({
   pk: `pk-${id}`,
@@ -12,18 +12,19 @@ const order = (id: string, status: Order['status'] = 'Created'): Order => ({
 });
 
 describe('orders store', () => {
+  const aggregate = (id: string): OrderAggregate => toOrderAggregate(order(id));
   const reducer = ordersFeature.reducer;
 
   it('stores loaded orders and clears loading', () => {
     const loading = reducer(initialOrdersState, ordersActions.load({ filter: {} }));
     expect(loading.loading).toBe(true);
-    const loaded = reducer(loading, ordersActions.loadSuccess({ orders: [order('O1')] }));
+    const loaded = reducer(loading, ordersActions.loadSuccess({ orders: [aggregate('O1')] }));
     expect(loaded.loading).toBe(false);
     expect(loaded.orders.length).toBe(1);
   });
 
   it('prepends new orders and replaces existing ones on upsert', () => {
-    const added = upsertOrder([order('O1')], order('O2'));
+    const added = upsertOrder([aggregate('O1')], order('O2'));
     expect(added.map(o => o.id)).toEqual(['O2', 'O1']);
 
     const updated = upsertOrder(added, order('O1', 'Processing'));
@@ -32,7 +33,7 @@ describe('orders store', () => {
   });
 
   it('applies SignalR order updates through orderUpserted', () => {
-    const state = { ...initialOrdersState, orders: [order('O1')] };
+    const state = { ...initialOrdersState, orders: [aggregate('O1')] };
     const next = reducer(state, ordersActions.orderUpserted({ order: order('O1', 'Completed') }));
     expect(next.orders[0].status).toBe('Completed');
   });

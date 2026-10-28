@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createActionGroup, createFeature, createReducer, emptyProps, on, props } from '@ngrx/store';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap, tap } from 'rxjs';
+import { loadSession, saveSession } from '../../core/session-storage';
 import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../core/models';
-import { BoardsApi } from './board-list/boards.api';
+import { BoardsApi } from './boards.api';
 
 export interface BoardsState {
   boards: Board[];
@@ -14,7 +15,7 @@ export interface BoardsState {
 export const initialBoardsState: BoardsState = {
   boards: [],
   loading: false,
-  filter: { pageIndex: 0, pageSize: 20 }
+  filter: loadSession<BoardFilter>('boards.filter', { pageIndex: 0, pageSize: 20 })
 };
 
 export const boardsActions = createActionGroup({
@@ -79,6 +80,15 @@ export class BoardsEffects {
         )
       )
     )
+  );
+
+  readonly persistFilter$ = createEffect(
+    () =>
+      this.actions$.pipe(
+        ofType(boardsActions.load),
+        tap(({ filter }) => saveSession('boards.filter', filter))
+      ),
+    { dispatch: false }
   );
 
   readonly update$ = createEffect(() =>

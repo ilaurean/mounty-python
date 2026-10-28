@@ -25,8 +25,4 @@
     <ProjectReference Include="..\..\Inventory\Inventory.Contracts\Inventory.Contracts.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Features\Operations\Consumers\" />
-  </ItemGroup>
-
 </Project>

@@ -61,3 +61,14 @@ html, body {
 
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: rgba(0, 0, 0, 0.04); }
+
+.app-dialog {
+  width: 100vw;
+  max-width: 100vw;
+}
+
+@media (min-width: 600px) {
+  .app-dialog {
+    width: 640px;
+  }
+}

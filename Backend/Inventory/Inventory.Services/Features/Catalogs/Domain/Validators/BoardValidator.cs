@@ -18,6 +18,7 @@ public class BoardValidator : Validator<Board, BoardValidator>
         RuleFor(x => x.Length).GreaterThan(0).When(x => x.Length.HasValue).WithMessage($"{nameof(Board.Length)} must be greater than 0.");
         RuleFor(x => x.Width).GreaterThan(0).When(x => x.Width.HasValue).WithMessage($"{nameof(Board.Width)} must be greater than 0.");
         RuleFor(x => x.Components).NotNull().WithMessage($"{nameof(Board.Components)} is required.")
+            .Must(x => x.Count > 0).WithMessage($"{nameof(Board)} must contain at least one component.")
             .ForEach(y => y.SetValidator(ComponentValidator.Instance));
     }
 }

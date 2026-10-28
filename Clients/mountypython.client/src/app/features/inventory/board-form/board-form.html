@@ -26,11 +26,11 @@
   <h3>Components</h3>
   @for (component of boardForm.components; track $index) {
     <div class="component-row">
-      <mat-form-field>
+      <mat-form-field class="name">
         <mat-label>Name</mat-label>
         <input matInput [formField]="component.name" />
       </mat-form-field>
-      <mat-form-field>
+      <mat-form-field class="description">
         <mat-label>Description</mat-label>
         <input matInput [formField]="component.description" />
       </mat-form-field>

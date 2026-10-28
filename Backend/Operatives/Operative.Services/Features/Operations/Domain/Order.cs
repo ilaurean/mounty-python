@@ -41,6 +41,24 @@ public sealed class Order : AuditableEntity
         Events.Add(new OrderUpdatedNameOrDescriptionEvent(this.ToDTO()));
     }
 
+    public void UpdateItems(IList<OrderItem> items)
+    {
+        if (Status != OrderStates.Created)
+        {
+            throw new FluentValidation.ValidationException("Order items can only be changed while the order is in 'Created' status.");
+        }
+        if (items.Count == 0)
+        {
+            throw new FluentValidation.ValidationException("An order must contain at least one item.");
+        }
+        Items.Clear();
+        foreach (var item in items)
+        {
+            Items.Add(item);
+        }
+        Events.Add(new OrderUpdatedNameOrDescriptionEvent(this.ToDTO()));
+    }
+
     public void StartProcessing()
     {
         IsOrderProcesableValidator.Instance.ValidateAndThrow(this);

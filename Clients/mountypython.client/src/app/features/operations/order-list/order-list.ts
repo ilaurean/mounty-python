@@ -1,12 +1,12 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal, untracked } from '@angular/core';
 import { form } from '@angular/forms/signals';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
 import { filter as filterOperator } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
-import { ORDER_STATUSES, Order, OrderStatus } from '../../../core/models';
-import { ConfirmDialog } from '../../../shared/confirm-dialog';
+import { ORDER_STATUSES, Order, OrderAggregate, OrderDetailsData, OrderSearch, OrderStatus, OrderViewMode } from '../../../core/models';
+import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
 import { OrderDetails } from '../order-details/order-details';
 import { OrderForm, OrderFormData, OrderFormResult } from '../order-form/order-form';
 import { OrdersApi } from '../orders.api';
@@ -27,8 +27,21 @@ export class OrderList implements OnInit {
   protected readonly orders = this.store.selectSignal(ordersFeature.selectOrders);
   protected readonly loading = this.store.selectSignal(ordersFeature.selectLoading);
   protected readonly currentFilter = this.store.selectSignal(ordersFeature.selectFilter);
+  private readonly selected = this.store.selectSignal(ordersFeature.selectSelected);
 
-  protected readonly search = signal({ name: '', state: '' });
+  constructor() {
+    effect(() => {
+      const selected = this.selected();
+      if (selected) {
+        untracked(() => this.show(selected.order, selected.mode));
+      }
+    });
+  }
+
+  protected readonly search = signal<OrderSearch>({
+    name: this.currentFilter().name ?? '',
+    state: this.currentFilter().state ?? ''
+  });
   protected readonly searchForm = form(this.search);
 
   protected readonly pageSize = computed(() => this.currentFilter().pageSize ?? 20);
@@ -49,7 +62,7 @@ export class OrderList implements OnInit {
   ]);
 
   ngOnInit(): void {
-    this.load(0, this.pageSize());
+    this.load(this.pageIndex(), this.pageSize());
   }
 
   protected load(pageIndex: number, pageSize: number): void {
@@ -67,12 +80,12 @@ export class OrderList implements OnInit {
     this.load(event.pageIndex, event.pageSize);
   }
 
-  protected canChange(order: Order): boolean {
+  protected canChange(order: OrderAggregate): boolean {
     return order.status === 'Created';
   }
 
-  protected details(order: Order): void {
-    this.dialog.open(OrderDetails, { data: { order }, width: '600px' });
+  protected details(summary: OrderAggregate): void {
+    this.store.dispatch(ordersActions.open({ id: summary.id, mode: 'details' }));
   }
 
   protected create(): void {
@@ -83,7 +96,15 @@ export class OrderList implements OnInit {
     });
   }
 
-  protected edit(order: Order): void {
+  protected edit(summary: OrderAggregate): void {
+    this.store.dispatch(ordersActions.open({ id: summary.id, mode: 'edit' }));
+  }
+
+  private show(order: Order, mode: OrderViewMode): void {
+    this.store.dispatch(ordersActions.close());
+    if (mode === 'details') {
+      this.dialog.open<OrderDetails, OrderDetailsData>(OrderDetails, { data: { order }, panelClass: 'app-dialog' });      return;
+    }
     this.openForm({ order }).subscribe(result => {
       if (result.update) {
         this.store.dispatch(ordersActions.update({ id: order.id, request: result.update }));
@@ -91,17 +112,17 @@ export class OrderList implements OnInit {
     });
   }
 
-  protected startProcessing(order: Order): void {
+  protected startProcessing(order: OrderAggregate): void {
     this.store.dispatch(ordersActions.startProcessing({ id: order.id }));
   }
 
-  protected complete(order: Order): void {
+  protected complete(order: OrderAggregate): void {
     this.store.dispatch(ordersActions.complete({ id: order.id }));
   }
 
-  protected cancel(order: Order): void {
+  protected cancel(order: OrderAggregate): void {
     this.dialog
-      .open<ConfirmDialog, { title: string; message: string }, boolean>(ConfirmDialog, {
+      .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, {
         data: { title: 'Cancel order', message: `Cancel order "${order.name}"?` }
       })
       .afterClosed()
@@ -109,7 +130,7 @@ export class OrderList implements OnInit {
       .subscribe(() => this.store.dispatch(ordersActions.cancel({ id: order.id })));
   }
 
-  protected download(order: Order): void {
+  protected download(order: OrderAggregate): void {
     this.api.download(order.id).subscribe(response => {
       const disposition = response.headers.get('Content-Disposition') ?? '';
       const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
@@ -125,7 +146,7 @@ export class OrderList implements OnInit {
 
   private openForm(data: OrderFormData) {
     return this.dialog
-      .open<OrderForm, OrderFormData, OrderFormResult>(OrderForm, { data })
+      .open<OrderForm, OrderFormData, OrderFormResult>(OrderForm, { data, panelClass: 'app-dialog' })
       .afterClosed()
       .pipe(filterOperator((result): result is OrderFormResult => !!result));
   }

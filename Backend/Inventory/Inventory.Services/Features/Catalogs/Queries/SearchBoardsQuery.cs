@@ -1,3 +1,4 @@
+using Commons.Infrastructure.Repositories;
 using Commons.Services;
 using Inventory.Contracts;
 using Inventory.Services.Features.Catalogs.Domain;
@@ -23,7 +24,8 @@ public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQue
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            query = query.Where(x => x.Name.Contains(filter.Name));
+            var term = SearchFunctions.NormalizeTerm(filter.Name);
+                        query = query.Where(x => SearchFunctions.Unaccent(x.Name).ToLower().Contains(term));
         }
 
         IList<BoardDTO> result = query
