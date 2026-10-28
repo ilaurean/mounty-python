@@ -26,9 +26,21 @@ public class Program
         builder.Services.AddTransient<IPushNotificationService, PushNotificationService>();
 
         var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
-        builder.Services.AddRebus(cfg => cfg
-            .Transport(t => t.UseRabbitMq(rabbitConn, "notification-services"))
-            .Routing(r => r.TypeBased()));
+        builder.Services.AddRebus(
+            cfg => cfg
+                .Transport(t => t.UseRabbitMq(rabbitConn, "notification-services"))
+                .Routing(r => r.TypeBased()),
+            onCreated: async bus =>
+            {
+                await bus.Subscribe<Operative.Contracts.Events.OrderCreatedEvent>();
+                await bus.Subscribe<Operative.Contracts.Events.OrderUpdatedNameOrDescriptionEvent>();
+                await bus.Subscribe<Operative.Contracts.Events.OrderStartProcessingEvent>();
+                await bus.Subscribe<Operative.Contracts.Events.OrderCompletedEvent>();
+                await bus.Subscribe<Operative.Contracts.Events.OrderCancelledEvent>();
+                await bus.Subscribe<Inventory.Contracts.Events.BoardCreatedEvent>();
+                await bus.Subscribe<Inventory.Contracts.Events.BoardUpdatedEvent>();
+                await bus.Subscribe<Inventory.Contracts.Events.BoardDeletedEvent>();
+            });
         builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 
         var app = builder.Build();
