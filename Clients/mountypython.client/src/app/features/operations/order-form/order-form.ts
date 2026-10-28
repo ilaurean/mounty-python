@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { applyEach, form, min, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Board, CreateOrderRequest, Order, UpdateOrderRequest } from '../../../core/models';
-import { BoardsApi } from '../../inventory/board-list/boards.api';
+import { BoardsApi } from '../../inventory/boards.api';
 
 export interface OrderFormData {
   order?: Order;
@@ -37,13 +37,14 @@ export class OrderForm implements OnInit {
   private readonly boardsApi = inject(BoardsApi);
 
   protected readonly isNew = !this.data.order;
+  protected readonly canEditItems = this.isNew || this.data.order?.status === 'Created';
   protected readonly boards = signal<Board[]>([]);
 
   protected readonly model = signal<OrderModel>({
     name: this.data.order?.name ?? '',
     description: this.data.order?.description ?? '',
     orderDate: (this.data.order?.orderDate ?? new Date().toISOString()).substring(0, 10),
-    items: []
+    items: (this.data.order?.items ?? []).map(i => ({ boardID: i.board.id, quantity: i.quantity }))
   });
 
   protected readonly orderForm = form(this.model, path => {
@@ -56,11 +57,11 @@ export class OrderForm implements OnInit {
   });
 
   protected readonly canSave = computed(
-    () => this.orderForm().valid() && (!this.isNew || this.model().items.length > 0)
+    () => this.orderForm().valid() && (!this.canEditItems || this.model().items.length > 0)
   );
 
   ngOnInit(): void {
-    if (this.isNew) {
+    if (this.canEditItems) {
       this.boardsApi.search({ pageIndex: 0, pageSize: 100 }).subscribe(boards => this.boards.set(boards));
     }
   }
@@ -78,11 +79,7 @@ export class OrderForm implements OnInit {
       return;
     }
     const value = this.model();
-    if (!this.isNew) {
-      this.dialogRef.close({ update: { name: value.name, description: value.description || null } });
-      return;
-    }
-    const items = value.items.map(item => {
+    const items = this.canEditItems ? value.items.map(item => {
       const board = this.boards().find(b => b.id === item.boardID)!;
       return {
         boardID: board.id,
@@ -90,7 +87,17 @@ export class OrderForm implements OnInit {
         quantity: item.quantity,
         components: board.components.map(c => ({ name: c.name, quantity: c.quantity }))
       };
-    });
+    }) : [];
+    if (!this.isNew) {
+      this.dialogRef.close({
+        update: {
+          name: value.name,
+          description: value.description || null,
+          ...(this.canEditItems ? { items } : {})
+        }
+      });
+      return;
+    }
     this.dialogRef.close({
       create: {
         name: value.name,

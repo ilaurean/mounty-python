@@ -8,6 +8,7 @@ export interface BoardFormData {
 }
 
 interface ComponentModel {
+  pk?: string;
   name: string;
   description: string;
   quantity: number;
@@ -41,6 +42,7 @@ export class BoardForm {
     length: this.data.board?.length ?? null,
     width: this.data.board?.width ?? null,
     components: (this.data.board?.components ?? []).map(c => ({
+      pk: c.pk,
       name: c.name,
       description: c.description ?? '',
       quantity: c.quantity
@@ -73,6 +75,7 @@ export class BoardForm {
     }
     const value = this.model();
     const components: ComponentRequest[] = value.components.map(c => ({
+      pk: c.pk,
       name: c.name,
       description: c.description || null,
       quantity: c.quantity

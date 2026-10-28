@@ -4,7 +4,7 @@ import { createActionGroup, createFeature, createReducer, emptyProps, on, props 
 import { catchError, map, of, switchMap, tap } from 'rxjs';
 import { loadSession, saveSession } from '../../core/session-storage';
 import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../core/models';
-import { BoardsApi } from './board-list/boards.api';
+import { BoardsApi } from './boards.api';
 
 export interface BoardsState {
   boards: Board[];

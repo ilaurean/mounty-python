@@ -29,6 +29,7 @@ export interface BoardFilter {
 }
 
 export interface ComponentRequest {
+  pk?: string;
   name: string;
   description?: string | null;
   quantity: number;
@@ -63,6 +64,24 @@ export interface Order extends Auditable {
   items: OrderItem[];
   orderDate: string;
   status: OrderStatus;
+}
+
+export interface OrderAggregate {
+  pk: string;
+  id: string;
+  name: string;
+  customerID: string;
+  orderDate: string;
+  status: OrderStatus;
+  boardsCount: number;
+  componentsCount: number;
+}
+
+export type OrderViewMode = 'details' | 'edit';
+
+export interface SelectedOrder {
+  order: Order;
+  mode: OrderViewMode;
 }
 
 export interface OrderFilter {
@@ -121,4 +140,5 @@ export interface CreateOrderRequest {
 export interface UpdateOrderRequest {
   name?: string | null;
   description?: string | null;
+  items?: CreateOrderItemRequest[];
 }

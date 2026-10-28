@@ -17,7 +17,7 @@
     </mat-form-field>
   </div>
 
-  @if (isNew) {
+  @if (canEditItems) {
     <h3>Boards</h3>
     @for (item of orderForm.items; track $index) {
       <div class="item-row">

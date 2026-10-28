@@ -31,11 +31,17 @@ public sealed class Board : AuditableEntity
         Width = width;
         if (components is not null)
         {
-            Components = components;
+            foreach (var removed in Components.Where(c => components.All(n => n.PK != c.PK)).ToList())
+            {
+                Components.Remove(removed);
+            }
+            foreach (var added in components.Where(n => Components.All(c => c.PK != n.PK)))
+            {
+                Components.Add(added);
+            }
         }
 
         BoardValidator.Instance.ValidateAndThrow(this);
-        UpdateDate = DateTime.UtcNow;
         Events.Add(new BoardUpdatedEvent(this.ToDTO()));
     }
 
