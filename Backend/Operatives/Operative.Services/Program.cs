@@ -29,12 +29,7 @@ var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
 builder.Services.AddRebus(
     cfg => cfg
         .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
-        .Routing(r => r.TypeBased()),
-    onCreated: async bus =>
-    {
-        await bus.Subscribe<Inventory.Contracts.Events.BoardUpdatedEvent>();
-        await bus.Subscribe<Inventory.Contracts.Events.BoardDeletedEvent>();
-    });
+        .Routing(r => r.TypeBased()));
 builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 builder.Services.AddScoped<IPublisher, Publisher>();
 
