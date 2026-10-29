@@ -18,9 +18,19 @@ public sealed class Component : ValueObject
 
     public int Quantity { get; private set; }
 
+    public static ComponentBuilder Create => new();
+
+    public void Update(string name, string? description, int quantity)
+    {
+        Name = name;
+        Description = description!;
+        Quantity = quantity;
+        ComponentValidator.Instance.ValidateAndThrow(this);
+    }
+
     public sealed class ComponentBuilder
     {
-        private readonly Component component = new();
+        private readonly Component component = new() { PK = Guid.NewGuid() };
 
         public ComponentBuilder WithName(string name) { component.Name = name; return this; }
         public ComponentBuilder WithDescription(string description) { component.Description = description; return this; }

@@ -1,2 +1,74 @@
 {
+  "realm": "mountypython",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "customer", "description": "Customer: manages own orders, reads catalogs" },
+      { "name": "manager", "description": "Manager: manages all orders and catalogs" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "mountypython-client",
+      "name": "Mounty Python Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": [ "http://localhost:4200/*", "https://localhost:4200/*" ],
+      "webOrigins": [ "+" ],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "protocolMappers": [
+        {
+          "name": "mountypython-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "mountypython-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "username": "TestUser1",
+      "enabled": true,
+      "email": "testuser1@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "User1",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "customer" ]
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "username": "TestUser2",
+      "enabled": true,
+      "email": "testuser2@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "User2",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "customer" ]
+    },
+    {
+      "username": "TestManager",
+      "enabled": true,
+      "email": "testmanager@mountypython.local",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Manager",
+      "credentials": [ { "type": "password", "value": "Passw0rd!", "temporary": false } ],
+      "realmRoles": [ "manager" ]
+    }
+  ]
 }

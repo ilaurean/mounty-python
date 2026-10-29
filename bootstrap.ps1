@@ -39,12 +39,20 @@ if (-not $Repo) {
     else { throw "Cannot detect GitHub repo from '$remote'. Pass -Repo owner/name." }
 }
 
+# GitHub may issue OIDC tokens with immutable IDs in the subject claim:
+#   repo:<owner>@<ownerId>/<name>@<repoId>:environment:<env>
+# Resolve the IDs so the federated credential subjects match what GitHub sends.
+$repoInfo = Invoke-Native { gh api "repos/$Repo" } | ConvertFrom-Json
+$ownerName, $repoName = $Repo -split '/', 2
+$subjectRepo = "$ownerName@$($repoInfo.owner.id)/$repoName@$($repoInfo.id)"
+
 $account  = Invoke-Native { az account show -o json } | ConvertFrom-Json
 $tenantId = $account.tenantId
 if (-not $DevSubscriptionId)  { $DevSubscriptionId  = $account.id }
 if (-not $ProdSubscriptionId) { $ProdSubscriptionId = $DevSubscriptionId }
 
 Write-Host "Repo:          $Repo"
+Write-Host "Subject repo:  $subjectRepo"
 Write-Host "Tenant:        $tenantId"
 Write-Host "Dev sub:       $DevSubscriptionId"
 Write-Host "Prod sub:      $ProdSubscriptionId"
@@ -65,27 +73,48 @@ if (-not $spId) {
 
 # --- Federated credentials (idempotent) -----------------------------------
 # Subjects must match the "environment:" values in .github/workflows/cd.yml
+# and the ID-based subject format emitted by GitHub Actions.
 $credentials = @(
-    @{ name = "github-$DevEnvironment";  subject = "repo:${Repo}:environment:$DevEnvironment" },
-    @{ name = "github-$ProdEnvironment"; subject = "repo:${Repo}:environment:$ProdEnvironment" }
+    @{ name = "github-$DevEnvironment";  subject = "repo:${subjectRepo}:environment:$DevEnvironment" },
+    @{ name = "github-$ProdEnvironment"; subject = "repo:${subjectRepo}:environment:$ProdEnvironment" }
 )
+
+function Write-CredentialFile {
+    param($Credential)
+    $file = New-TemporaryFile
+    @{
+        name      = $Credential.name
+        issuer    = "https://token.actions.githubusercontent.com"
+        subject   = $Credential.subject
+        audiences = @("api://AzureADTokenExchange")
+    } | ConvertTo-Json -Compress | Set-Content -Path $file -Encoding utf8
+    return $file
+}
 
 $existing = Invoke-Native { az ad app federated-credential list --id $appObjectId -o json } | ConvertFrom-Json
 foreach ($c in $credentials) {
-    if ($existing | Where-Object { $_.name -eq $c.name }) {
-        Write-Host "Federated credential '$($c.name)' already exists."
+    $current = $existing | Where-Object { $_.name -eq $c.name }
+
+    if ($current -and $current.subject -eq $c.subject) {
+        Write-Host "Federated credential '$($c.name)' is up to date."
         continue
     }
-    Write-Host "Creating federated credential '$($c.name)' -> $($c.subject)"
-    $file = New-TemporaryFile
-    @{
-        name      = $c.name
-        issuer    = "https://token.actions.githubusercontent.com"
-        subject   = $c.subject
-        audiences = @("api://AzureADTokenExchange")
-    } | ConvertTo-Json -Compress | Set-Content -Path $file -Encoding utf8
-    Invoke-Native { az ad app federated-credential create --id $appObjectId --parameters "@$file" } | Out-Null
-    Remove-Item $file
+
+    $file = Write-CredentialFile $c
+    try {
+        if ($current) {
+            Write-Host "Updating federated credential '$($c.name)' -> $($c.subject)"
+            Invoke-Native {
+                az ad app federated-credential update --id $appObjectId `
+                    --federated-credential-id $current.id --parameters "@$file"
+            } | Out-Null
+        }
+        else {
+            Write-Host "Creating federated credential '$($c.name)' -> $($c.subject)"
+            Invoke-Native { az ad app federated-credential create --id $appObjectId --parameters "@$file" } | Out-Null
+        }
+    }
+    finally { Remove-Item $file -ErrorAction SilentlyContinue }
 }
 
 # --- Role assignments (aspire deploy creates RGs and role assignments) ----
@@ -133,6 +162,5 @@ foreach ($t in $targets) {
     }
 }
 
-Write-Host "`nDone. Still to set manually per environment (output of your infra/ACR setup):"
-Write-Host "  AZURE_CONTAINER_REGISTRY_ENDPOINT, AZURE_MI_RESOURCE_ID"
+Write-Host "`nDone."
 Write-Host "Add required reviewers on '$ProdEnvironment' in GitHub > Settings > Environments."

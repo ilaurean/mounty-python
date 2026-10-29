@@ -5,11 +5,20 @@ using ILogger = Serilog.ILogger;
 
 namespace Notification.Services.Consumers;
 
-public class BoardConsumer(IPushNotificationService pushService, ILogger logger) : IHandleMessages<BoardCreatedEvent>, IHandleMessages<BoardDeletedEvent>
+public class BoardConsumer(IPushNotificationService pushService, ILogger logger) :
+    IHandleMessages<BoardCreatedEvent>,
+    IHandleMessages<BoardUpdatedEvent>,
+    IHandleMessages<BoardDeletedEvent>
 {
     public async Task Handle(BoardCreatedEvent boardEvent)
     {
-        logger.Information("New board created with ID: {BoardId}.", boardEvent.Board.ID);
+        logger.Information("Board with ID: {BoardId} created.", boardEvent.Board.ID);
+        await pushService.UpdatedBoard(boardEvent.Board);
+    }
+
+    public async Task Handle(BoardUpdatedEvent boardEvent)
+    {
+        logger.Information("Board with ID: {BoardId} updated.", boardEvent.Board.ID);
         await pushService.UpdatedBoard(boardEvent.Board);
     }
 

@@ -1,0 +1,50 @@
+<h2 mat-dialog-title>{{ isNew ? 'New order' : 'Edit order' }}</h2>
+<mat-dialog-content>
+  <div class="grid">
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [formField]="orderForm.name" />
+    </mat-form-field>
+    @if (isNew) {
+      <mat-form-field>
+        <mat-label>Order date</mat-label>
+        <input matInput type="date" [formField]="orderForm.orderDate" />
+      </mat-form-field>
+    }
+    <mat-form-field class="wide">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="2" [formField]="orderForm.description"></textarea>
+    </mat-form-field>
+  </div>
+
+  @if (canEditItems) {
+    <h3>Boards</h3>
+    @for (item of orderForm.items; track $index) {
+      <div class="item-row">
+        <mat-form-field class="board">
+          <mat-label>Board</mat-label>
+          <select matNativeControl [formField]="item.boardID">
+            <option value=""></option>
+            @for (board of boards(); track board.id) {
+              <option [value]="board.id">{{ board.name }} ({{ board.id }})</option>
+            }
+          </select>
+        </mat-form-field>
+        <mat-form-field class="qty">
+          <mat-label>Quantity</mat-label>
+          <input matInput type="number" [formField]="item.quantity" />
+        </mat-form-field>
+        <button mat-icon-button type="button" (click)="removeItem($index)" aria-label="Remove board">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    }
+    <button mat-stroked-button type="button" (click)="addItem()">
+      <mat-icon>add</mat-icon> Add board
+    </button>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="!canSave()" (click)="save()">Save</button>
+</mat-dialog-actions>

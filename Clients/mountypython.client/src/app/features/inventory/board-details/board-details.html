@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>{{ board.name }}</h2>
+<mat-dialog-content>
+  <dl>
+    <dt>ID</dt>
+    <dd>{{ board.id }}</dd>
+    <dt>Description</dt>
+    <dd>{{ board.description || '-' }}</dd>
+    <dt>Length x Width</dt>
+    <dd>{{ board.length ?? '-' }} x {{ board.width ?? '-' }}</dd>
+    <dt>Created</dt>
+    <dd>{{ board.createDate | date: 'medium' }}</dd>
+    @if (board.updateDate) {
+      <dt>Updated</dt>
+      <dd>{{ board.updateDate | date: 'medium' }}</dd>
+    }
+  </dl>
+  <h3>Components</h3>
+  @for (component of board.components; track component.pk) {
+    <div>
+      <strong>{{ component.name }}</strong> (x{{ component.quantity }})
+      @if (component.description) {
+        <div class="mat-body-small">{{ component.description }}</div>
+      }
+    </div>
+  } @empty {
+    <p>No components.</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

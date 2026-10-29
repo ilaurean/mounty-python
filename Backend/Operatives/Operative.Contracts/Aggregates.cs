@@ -4,11 +4,11 @@ namespace Operative.Contracts;
 
 public sealed record OrderAggregateDTO(
     Guid PK,
-    string OrderID,
+    string ID,
     string Name,
     string CustomerID,
-    DateTime StartDate,
-    OrderStates State,
+    DateTime OrderDate,
+    OrderStates Status,
     int BoardsCount,
     int ComponentsCount) : AggregateDTO(PK)
 { }

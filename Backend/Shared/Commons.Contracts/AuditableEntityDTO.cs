@@ -8,8 +8,8 @@ public abstract record AuditableEntityDTO(
     string ID,
     DateTime? CreateDate,
     DateTime? UpdateDate,
-    DateTime? DisableDate) : ValueObjectDTO(PK);
+    DateTime? DeleteDate) : ValueObjectDTO(PK);
 
 public abstract record AggregateDTO(Guid PK) : ValueObjectDTO(PK);
 
-public abstract record FilterDTO;
+public abstract record FilterDTO(int? pageIndex, int? pageSize);

@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>{{ order.name }}</h2>
+<mat-dialog-content>
+  <dl>
+    <dt>ID</dt>
+    <dd>{{ order.id }}</dd>
+    <dt>Status</dt>
+    <dd>{{ order.status }}</dd>
+    <dt>Description</dt>
+    <dd>{{ order.description || '-' }}</dd>
+    @if (auth.isManager) {
+      <dt>Customer</dt>
+      <dd>{{ order.customerID }}</dd>
+    }
+    <dt>Order date</dt>
+    <dd>{{ order.orderDate | date: 'mediumDate' }}</dd>
+    <dt>Created</dt>
+    <dd>{{ order.createDate | date: 'medium' }}</dd>
+    @if (order.updateDate) {
+      <dt>Updated</dt>
+      <dd>{{ order.updateDate | date: 'medium' }}</dd>
+    }
+  </dl>
+  <h3>Boards</h3>
+  @for (item of order.items; track item.pk) {
+    <div>
+      <strong>{{ item.position }}. {{ item.board.name }}</strong> (x{{ item.quantity }})
+      @for (component of item.board.components; track component.pk) {
+        <div class="mat-body-small">- {{ component.name }} (x{{ component.quantity * item.quantity }})</div>
+      }
+    </div>
+  } @empty {
+    <p>No items.</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

@@ -1,5 +1,6 @@
 using Commons.Services;
 using Notification.Services.Infrastructure.Messaging;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 
@@ -14,8 +15,10 @@ public class Program
 
         builder.SetupLogging();
 
+        builder.Services.SetupJsonDefaults();
+
         // Add services to the container.
-        builder.Services.AddAuthentication().AddJwtBearer();
+        builder.Services.AddMountyJwtBearer(builder.Configuration, builder.Environment);
         builder.Services.AddAuthorization();
 
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -24,9 +27,10 @@ public class Program
         builder.Services.AddTransient<IPushNotificationService, PushNotificationService>();
 
         var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
-        builder.Services.AddRebus(cfg => cfg
-            .Transport(t => t.UseRabbitMq(rabbitConn, "notification-services"))
-            .Routing(r => r.TypeBased()));
+        builder.Services.AddRebus(
+            cfg => cfg
+                .Transport(t => t.UseRabbitMq(rabbitConn, "notification-services"))
+                .Routing(r => r.TypeBased()));
         builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 
         var app = builder.Build();

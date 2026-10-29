@@ -17,7 +17,7 @@ public sealed class Component : ValueObject
 
     public sealed class ComponentBuilder
     {
-        private readonly Component component = new();
+        private readonly Component component = new() { PK = Guid.NewGuid() };
 
         public ComponentBuilder WithName(string name) { component.Name = name; return this; }
         public ComponentBuilder WithQuantity(int quantity) { component.Quantity = quantity; return this; }

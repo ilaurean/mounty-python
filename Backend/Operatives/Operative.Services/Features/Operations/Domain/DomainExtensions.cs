@@ -23,6 +23,22 @@ public static class DomainExtensions
         );
     }
 
+    /// <summary>Lightweight aggregate projection used by order search/list results (see copilot-instructions.md: queries return aggregate DTOs).</summary>
+    public static OrderAggregateDTO ToAggregateDTO(this Order order)
+    {
+        return new OrderAggregateDTO
+        (
+            order.PK,
+            order.ID,
+            order.Name,
+            order.CustomerID,
+            order.OrderDate,
+            order.Status,
+            order.Items.Count,
+            order.Items.Sum(i => i.Board.Components.Count)
+        );
+    }
+
     public static OrderItemDTO ToDTO(this OrderItem item)
     {
         return new OrderItemDTO

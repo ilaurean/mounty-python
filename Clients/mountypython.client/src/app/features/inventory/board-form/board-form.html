@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>{{ isNew ? 'New board' : 'Edit board' }}</h2>
+<mat-dialog-content>
+  <div class="grid">
+    <mat-form-field>
+      <mat-label>ID</mat-label>
+      <input matInput [formField]="boardForm.id" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [formField]="boardForm.name" />
+    </mat-form-field>
+    <mat-form-field class="wide">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="2" [formField]="boardForm.description"></textarea>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Length</mat-label>
+      <input matInput type="number" [formField]="boardForm.length" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Width</mat-label>
+      <input matInput type="number" [formField]="boardForm.width" />
+    </mat-form-field>
+  </div>
+
+  <h3>Components</h3>
+  @for (component of boardForm.components; track $index) {
+    <div class="component-row">
+      <mat-form-field class="name">
+        <mat-label>Name</mat-label>
+        <input matInput [formField]="component.name" />
+      </mat-form-field>
+      <mat-form-field class="description">
+        <mat-label>Description</mat-label>
+        <input matInput [formField]="component.description" />
+      </mat-form-field>
+      <mat-form-field class="qty">
+        <mat-label>Quantity</mat-label>
+        <input matInput type="number" [formField]="component.quantity" />
+      </mat-form-field>
+      <button mat-icon-button type="button" (click)="removeComponent($index)" aria-label="Remove component">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  }
+  <button mat-stroked-button type="button" (click)="addComponent()">
+    <mat-icon>add</mat-icon> Add component
+  </button>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" [disabled]="!canSave()" (click)="save()">Save</button>
+</mat-dialog-actions>

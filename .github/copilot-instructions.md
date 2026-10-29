@@ -49,12 +49,13 @@
 
 ## Key Conventions
 - Queries should return directly Aggregate DTO, and not Domain Entities, However Commads can return Domain Entities, and the Controller maps them to DTOs.
-- Queries should look like I<<Action>>Query and kept in the same file with the implementation: <<Action>>Query and defined in <<Project>>/Features/<<Feature>>/Queries.
-- Commands should look like I<<Action>>Command and kept in the same file with the implementation: <<Action>>Command and defined in <<Project>>/Features/<<Feature>>/Commands.
-- Consumers should look like I<<Action>>Consumer and kept in the same file with the implementation: <<Action>>Consumer and defined in <<Project>>/Features/<<Feature>>/Consumers.
+- Queries should look like I<<Action>>Query and kept in the same file with the implementation: <<Action>>Query and defined in <<Project>>/Features/<<Feature>>/Queries. Each query in a separate file.
+- Commands should look like I<<Action>>Command and kept in the same file with the implementation: <<Action>>Command and defined in <<Project>>/Features/<<Feature>>/Commands. Each command in a separate file.
+- Consumers should look like I<<Action>>Consumer and kept in the same file with the implementation: <<Action>>Consumer and defined in <<Project>>/Features/<<Feature>>/Consumers. Each consumer in a separate file.
 - Ask before changing the Domain Models.
 
 ## Frontend Conventions
+- design: mobile-first, desktop-second
 - use Signal-Forms for forms, and use NgRx for state management.
 - The frontend should be structured in a way that separates concerns and promotes maintainability.
 - The frontend should reflect the backend's vertical slice architecture, with feature modules corresponding to backend services.

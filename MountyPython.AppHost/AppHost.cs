@@ -1,7 +1,9 @@
+using Aspire.Hosting.Yarp.Transforms;
+
 var builder = DistributedApplication.CreateBuilder(args);
 var isPublishing = builder.ExecutionContext.IsPublishMode;
 
-var containerName = "mounthypython-" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "prod" : "dev");
+var containerName = "mountypython-" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "prod" : "dev");
 var aca = builder.AddAzureContainerAppEnvironment(containerName);
 
 var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
@@ -9,14 +11,14 @@ var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
     {
         c.WithImageTag("18-alpine")
             .WithHostPort(5432)
-            .WithDataVolume("mounthypython-postgres-data")
+            .WithDataVolume("mountypython-postgres-data")
             .WithLifetime(ContainerLifetime.Persistent)
-            .WithContainerName("mounthypython-postgres-container")
+            .WithContainerName("mountypython-postgres-container")
             .WithPgAdmin(pgAdmin =>
             {
                 pgAdmin.WithHostPort(5050);
                 pgAdmin.WithLifetime(ContainerLifetime.Persistent);
-                pgAdmin.WithContainerName("mounthypython-pgadmin-container");
+                pgAdmin.WithContainerName("mountypython-pgadmin-container");
             });
     });
 
@@ -28,7 +30,7 @@ if (isPublishing)
 var messages = builder.AddRabbitMQ("rabbit")
     .WithManagementPlugin()
     .WithLifetime(ContainerLifetime.Persistent)
-    .WithContainerName("mounthypython-rabbit-container")
+    .WithContainerName("mountypython-rabbit-container")
     .PublishAsContainer();
 
 var keycloakAdmin = builder.AddParameter("keycloak-admin", secret: false, value: "admin");
@@ -38,8 +40,8 @@ int? keycloakPort = isPublishing ? null : 9001;
 var keycloakDatabaseName = "mountypython_Keycloak" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "" : "_DEV");
 //configure keycloak +aspire + sqlserver: https://github.com/dotnet/aspire/discussions/6563
 var keycloakDbResource = postgres.AddDatabase("mountypython-keycloakdb", keycloakDatabaseName);
-
 var keycloakDbUrl = ReferenceExpression.Create($"jdbc:postgresql://{postgres.Resource.HostName}/{keycloakDbResource.Resource.DatabaseName}");
+
 var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycloakAdmin, adminPassword: keycloakPassword, port: keycloakPort)
     .WithImageTag("26.8")
     .WithEnvironment("KC_DB", "postgres")
@@ -72,7 +74,7 @@ var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycl
 if (!isPublishing)
 {
     keycloak.WithDataVolume()
-        .WithRealmImport("keycloak")
+        .WithRealmImport("./import.json")
         // Mount the custom mountypython login theme into the Keycloak themes directory
         .WithBindMount("./keycloak/themes/mountypython", "/opt/keycloak/themes/mountypython", isReadOnly: true);
 }
@@ -80,9 +82,12 @@ if (!isPublishing)
 var keycloakAuthority = ReferenceExpression.Create(
     $"{keycloak.GetEndpoint("http").Property(EndpointProperty.Url)}/realms/mountypython");
 
+// Must match the audience mapper on the realm client in import.json.
+const string keycloakAudience = "mountypython-api";
 
 var notifications = builder.AddProject<Projects.Notification_Services>("notification-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(messages).WaitFor(messages)
     .WithReference(keycloak).WaitFor(keycloak);
 
@@ -90,6 +95,7 @@ var inventoryDatabaseName = "MountyPython_Inventory" + (builder.Configuration["E
 var inventoryDbResource = postgres.AddDatabase("mountypython-inventorydb", inventoryDatabaseName);
 var inventory = builder.AddProject<Projects.Inventory_Services>("inventory-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(inventoryDbResource).WaitFor(inventoryDbResource)
     .WithReference(notifications).WaitFor(notifications)
     .WithReference(messages).WaitFor(messages)
@@ -99,6 +105,7 @@ var operativeDatabaseName = "MountyPython_Operative" + (builder.Configuration["E
 var operativeDbResource = postgres.AddDatabase("mountypython-operativedb", operativeDatabaseName);
 var orders = builder.AddProject<Projects.Operative_Services>("operative-services")
     .WithEnvironment("Auth__Authority", keycloakAuthority)
+    .WithEnvironment("Auth__Audience", keycloakAudience)
     .WithReference(operativeDbResource).WaitFor(operativeDbResource)
     .WithReference(notifications).WaitFor(notifications)
     .WithReference(messages).WaitFor(messages)
@@ -118,6 +125,7 @@ var webApp = builder.AddJavaScriptApp("mountypython-client", "../Clients/mountyp
     {
         endpoint.UriScheme = "http";
         endpoint.TargetPort = isPublishing ? null : 4200;
+        endpoint.IsProxied = isPublishing;
     });
 
 if (isPublishing)
@@ -129,7 +137,8 @@ if (isPublishing)
         .WithReference(notifications).WaitFor(notifications)
         .WithConfiguration(config =>
         {
-            config.AddRoute("/auth/{**catch-all}", keycloak);
+            config.AddRoute("/auth/{**catch-all}", keycloak)
+                .WithTransformPathRemovePrefix("/auth");
             config.AddRoute("/resources/{**catch-all}", keycloak);
             config.AddRoute("/realms/{**catch-all}", keycloak);
             config.AddRoute("/js/{**catch-all}", keycloak);
@@ -137,12 +146,12 @@ if (isPublishing)
             config.AddRoute("/admin/{**catch-all}", keycloak);
 
             config.AddRoute("/api/catalogs/{**catch-all}", inventory);
-            config.AddRoute("/api/opertions/{**catch-all}", orders);
+            config.AddRoute("/api/operations/{**catch-all}", orders);
 
             config.AddRoute("/api/notifications/{**catch-all}", notifications);
             config.AddRoute("/api/v1/updateshub/{**catch-all}", notifications);
         })
-        //.WithExternalHttpEndpoints()
+        .WithExternalHttpEndpoints()
         .PublishWithStaticFiles(webApp);
 }
 

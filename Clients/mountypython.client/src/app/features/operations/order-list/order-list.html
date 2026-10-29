@@ -1,0 +1,105 @@
+<div class="page">
+  <div class="page-header">
+    <h1>{{ auth.isManager ? 'All orders' : 'My orders' }}</h1>
+    @if (auth.isCustomer) {
+      <button mat-flat-button color="primary" (click)="create()">
+        <mat-icon>add</mat-icon> New order
+      </button>
+    }
+  </div>
+
+  <form class="filters" (submit)="$event.preventDefault(); onSearch()">
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input matInput [formField]="searchForm.name" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Status</mat-label>
+      <select matNativeControl [formField]="searchForm.state">
+        <option value="">Any</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ status }}</option>
+        }
+      </select>
+    </mat-form-field>
+    <button mat-stroked-button type="submit"><mat-icon>search</mat-icon> Search</button>
+  </form>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <div class="table-wrap">
+    <table mat-table [dataSource]="orders()" class="full-width">
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>ID</th>
+        <td mat-cell *matCellDef="let order">{{ order.id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let order">
+          {{ order.name }}
+          @if (order.description) {
+            <div class="mat-body-small">{{ order.description }}</div>
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="customerID">
+        <th mat-header-cell *matHeaderCellDef>Customer</th>
+        <td mat-cell *matCellDef="let order">{{ order.customerID }}</td>
+      </ng-container>
+      <ng-container matColumnDef="orderDate">
+        <th mat-header-cell *matHeaderCellDef>Order date</th>
+        <td mat-cell *matCellDef="let order">{{ order.orderDate | date: 'mediumDate' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="items">
+        <th mat-header-cell *matHeaderCellDef>Boards</th>
+        <td mat-cell *matCellDef="let order">{{ order.boardsCount }}</td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let order">{{ order.status }}</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let order" class="row-actions" (click)="$event.stopPropagation()">
+          @if (canChange(order)) {
+            <button mat-icon-button (click)="edit(order)" aria-label="Edit order" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+          }
+          @if (auth.isManager && order.status === 'Created') {
+            <button mat-icon-button (click)="startProcessing(order)" aria-label="Start processing" matTooltip="Start processing">
+              <mat-icon>play_arrow</mat-icon>
+            </button>
+          }
+          @if (auth.isManager && order.status === 'Processing') {
+            <button mat-icon-button (click)="complete(order)" aria-label="Complete" matTooltip="Complete">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+          }
+          @if (canChange(order)) {
+            <button mat-icon-button (click)="cancel(order)" aria-label="Cancel order" matTooltip="Cancel">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          }
+          <button mat-icon-button (click)="download(order)" aria-label="Download order" matTooltip="Download to production line">
+            <mat-icon>download</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns()" class="clickable-row" (click)="details(row)"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="columns().length">No orders found.</td>
+      </tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="total()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)" />
+</div>
