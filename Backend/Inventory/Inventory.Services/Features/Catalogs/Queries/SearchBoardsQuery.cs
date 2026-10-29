@@ -24,6 +24,7 @@ public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQue
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
             query = query.Where(x => EF.Functions.ILike(x.Name, $"%{filter.Name}%"));
+            //query = query.Where(x => x.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
         IList<BoardDTO> result = query
