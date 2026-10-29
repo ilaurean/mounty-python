@@ -1,5 +1,3 @@
-using Aspire.Hosting.Yarp.Transforms;
-
 var builder = DistributedApplication.CreateBuilder(args);
 var isPublishing = builder.ExecutionContext.IsPublishMode;
 
@@ -38,16 +36,11 @@ var keycloakPassword = builder.AddParameter("keycloak-password", secret: true, v
 int? keycloakPort = isPublishing ? null : 9001;
 
 var keycloakDatabaseName = "mountypython_Keycloak" + (builder.Configuration["ENVIRONMENT"] == "Production" ? "" : "_DEV");
-//configure keycloak +aspire + sqlserver: https://github.com/dotnet/aspire/discussions/6563
 var keycloakDbResource = postgres.AddDatabase("mountypython-keycloakdb", keycloakDatabaseName);
-var keycloakDbUrl = ReferenceExpression.Create($"jdbc:postgresql://{postgres.Resource.HostName}/{keycloakDbResource.Resource.DatabaseName}");
 
 var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycloakAdmin, adminPassword: keycloakPassword, port: keycloakPort)
     .WithImageTag("26.8")
-    .WithEnvironment("KC_DB", "postgres")
-    .WithEnvironment("KC_DB_USERNAME", ReferenceExpression.Create($"{postgres!.Resource.UserName!}"))
-    .WithEnvironment("KC_DB_PASSWORD", ReferenceExpression.Create($"{postgres!.Resource.Password!}"))
-    .WithEnvironment("KC_DB_URL", keycloakDbUrl)
+    .WithAzurePostgresFlexibleServer(keycloakDbResource)
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
@@ -137,8 +130,8 @@ if (isPublishing)
         .WithReference(notifications).WaitFor(notifications)
         .WithConfiguration(config =>
         {
-            config.AddRoute("/auth/{**catch-all}", keycloak)
-                .WithTransformPathRemovePrefix("/auth");
+            config.AddRoute("/auth/{**catch-all}", keycloak);
+            //.WithTransformPathRemovePrefix("/auth");
             config.AddRoute("/resources/{**catch-all}", keycloak);
             config.AddRoute("/realms/{**catch-all}", keycloak);
             config.AddRoute("/js/{**catch-all}", keycloak);
