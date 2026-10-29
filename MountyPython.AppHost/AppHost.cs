@@ -78,10 +78,6 @@ if (!isPublishing)
         // Mount the custom mountypython login theme into the Keycloak themes directory
         .WithBindMount("./keycloak/themes/mountypython", "/opt/keycloak/themes/mountypython", isReadOnly: true);
 }
-else
-{
-    keycloak.WithDockerfile("./keycloak");
-}
 
 var keycloakAuthority = ReferenceExpression.Create(
     $"{keycloak.GetEndpoint("http").Property(EndpointProperty.Url)}/realms/mountypython");
