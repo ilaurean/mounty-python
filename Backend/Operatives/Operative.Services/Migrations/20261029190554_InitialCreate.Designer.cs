@@ -12,7 +12,7 @@ using Operative.Services.Infrastructure.Repositories;
 namespace Operative.Services.Migrations
 {
     [DbContext(typeof(OperativeDbContext))]
-    [Migration("20261024113503_InitialCreate")]
+    [Migration("20261029190554_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,7 +20,7 @@ namespace Operative.Services.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);

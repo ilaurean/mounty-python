@@ -1,5 +1,4 @@
-﻿using Commons.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Operative.Services.Features.Operations.Domain;
 
@@ -8,11 +7,6 @@ namespace Operative.Services.Infrastructure.Repositories;
 public class OperativeDbContext(DbContextOptions<OperativeDbContext> options) : DbContext(options)
 {
     public DbSet<Order> Orders => Set<Order>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.UseUnaccent();
-    }
 }
 
 public class OperativeDbContextFactory : IDesignTimeDbContextFactory<OperativeDbContext>

@@ -16,12 +16,12 @@ namespace Inventory.Services.Migrations
                 columns: table => new
                 {
                     PK = table.Column<Guid>(type: "uuid", nullable: false),
-                    ID = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     Description = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
                     Length = table.Column<decimal>(type: "numeric", nullable: true),
                     Width = table.Column<decimal>(type: "numeric", nullable: true),
                     Timestamp = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: true),
+                    ID = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     CreateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdateDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeleteDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)

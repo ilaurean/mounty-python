@@ -1,4 +1,3 @@
-using Commons.Infrastructure.Repositories;
 using Commons.Services;
 using Microsoft.EntityFrameworkCore;
 using Operative.Contracts;
@@ -28,8 +27,7 @@ public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            var term = SearchFunctions.NormalizeTerm(filter.Name);
-                        query = query.Where(x => SearchFunctions.Unaccent(x.Name).ToLower().Contains(term));
+            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{filter.Name}%"));
         }
 
         if (currentUser.isManager && !string.IsNullOrWhiteSpace(filter.CustomerID))
