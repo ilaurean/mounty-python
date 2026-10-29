@@ -12,7 +12,7 @@ public interface ISearchOrdersQuery
 
 public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
 {
-    public Task<IList<OrderAggregateDTO>> ExecuteAsync(CurrentUser currentUser, OrderFilterDTO filter, CancellationToken cancellationToken)
+    public async Task<IList<OrderAggregateDTO>> ExecuteAsync(CurrentUser currentUser, OrderFilterDTO filter, CancellationToken cancellationToken)
     {
         var query = repository.Entities.AsNoTracking();
 
@@ -45,7 +45,7 @@ public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
             query = query.Where(x => x.Items.Any(y => y.Board.ID == filter.BoardID));
         }
 
-        var orders = query
+        var orders = await query
              .Include(x => x.Items)
                 .ThenInclude(y => y.Board)
                 .ThenInclude(z => z.Components)
@@ -53,7 +53,7 @@ public class SearchOrdersQuery(IOrderRepository repository) : ISearchOrdersQuery
             .Skip(filter.pageIndex ?? 0)
             .Take(filter.pageSize ?? 20)
             .Select(x => x.ToAggregateDTO())
-            .ToList();
-        return Task.FromResult<IList<OrderAggregateDTO>>(orders);
+            .ToListAsync(cancellationToken);
+        return await Task.FromResult<IList<OrderAggregateDTO>>(orders);
     }
 }

@@ -11,6 +11,7 @@ on:
           - dev
           - prod
       confirm:
+        type: string
         description: 'Type the environment name again to confirm (e.g. "dev")'
         required: true
 
