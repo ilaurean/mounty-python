@@ -4,9 +4,31 @@
   margin-right: 8px;
 }
 
-.title {
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
   margin-right: 24px;
+  min-width: 0;
+}
+
+.title {
   font-weight: 500;
+}
+
+.motto {
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .motto {
+    display: none;
+  }
 }
 
 .spacer {

@@ -1,5 +1,5 @@
 # MountyPython
-**Title:** Monty-Python
+**Title:** Mounty-Python
 
 **Motto:** Always look on the bright side of the board.
 
@@ -89,7 +89,7 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 - Due Aspire: 3 Microservices (2 for Business, 1 for Notifications) instead of 1 Monolith
 - Frontend: TypeScript, Angular, Angular Material, Signal-Forms for simplicity and efficiency, NgRx - State Management
 - E2E Test: Playwright if time allows
-- First steps in reliable services: Aspire.ServiceDefaults add retry policy, fail-fast, circuit-breaker, timeout, logging, metrics, health-checks, etc.
+- First steps in reliable services: Aspire.ServiceDefaults add retry policy, fail-fast, timeout, logging, metrics, health-checks, etc.
 - Self-Written map to DTO instead of AutoMapper due to license costs, and simplicity
 - Monitoring: OpenTelemetry, Azure Insights
 
