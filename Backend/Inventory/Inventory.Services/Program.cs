@@ -31,7 +31,7 @@ builder.Services.AddRebus(cfg => cfg
     .Transport(t => t.UseRabbitMq(rabbitConn, "inventory-services"))
     .Options(o => o.RetryStrategy(
         maxDeliveryAttempts: 5,
-        errorQueueName: "error-queue",
+        errorQueueName: "inventory-error-queue",
         secondLevelRetriesEnabled: true))  // Enable second-level retries
     .Routing(r => r.TypeBased()));
 builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
