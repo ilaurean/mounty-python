@@ -5,6 +5,7 @@ using FluentValidation;
 using Operative.Services.Features.Operations;
 using Operative.Services.Infrastructure.Repositories;
 using Rebus.Config;
+using Rebus.Retry.Simple;
 using Rebus.Routing.TypeBased;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,10 +27,13 @@ builder.Services.AddOperationsServices();
 builder.Services.AddOpenApi();
 
 var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
-builder.Services.AddRebus(
-    cfg => cfg
-        .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
-        .Routing(r => r.TypeBased()));
+builder.Services.AddRebus(cfg => cfg
+    .Transport(t => t.UseRabbitMq(rabbitConn, "operative-services"))
+    .Options(o => o.RetryStrategy(
+        maxDeliveryAttempts: 5,
+        errorQueueName: "error-queue",
+        secondLevelRetriesEnabled: true))  // Enable second-level retries
+    .Routing(r => r.TypeBased()));
 builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
 builder.Services.AddScoped<IPublisher, Publisher>();
 
