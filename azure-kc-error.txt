@@ -1,0 +1,6 @@
+stdout F 2026-10-29 20:44:40,635 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+[system] ProbeFailed	Probe of StartUp failed with status code: 1
+stdout F 2026-10-29 20:44:42,330 WARN  [org.hibernate.orm.jdbc.error] (JPA Startup Thread) HHH000247: ErrorCode: 0, SQLState: 22023
+stdout F 2026-10-29 20:44:42,330 WARN  [org.hibernate.orm.jdbc.error] (JPA Startup Thread) Unable to load Authentication Plugin com.azure.identity.extensions.jdbc.postgresql.AzurePostgresqlAuthenticationPlugin
+stdout F 2026-10-29 20:44:42,331 WARN  [org.hibernate.orm.jdbc] (JPA Startup Thread) HHH100046: Could not obtain connection to query JDBC database metadata: org.hibernate.exception.DataException: Unable to obtain isolated JDBC connection [Unable to load Authentication Plugin com.azure.identity.extensions.jdbc.postgresql.AzurePostgresqlAuthenticationPlugin] [n/a]
+stdout F 	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:84)

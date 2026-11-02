@@ -1,4 +1,3 @@
-using Commons.Infrastructure.Repositories;
 using Commons.Services;
 using Inventory.Contracts;
 using Inventory.Services.Features.Catalogs.Domain;
@@ -13,7 +12,7 @@ public interface ISearchBoardsQuery
 
 public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQuery
 {
-    public Task<IList<BoardDTO>> ExecuteAsync(CurrentUser currentUser, BoardFilterDTO filter, CancellationToken cancellationToken)
+    public async Task<IList<BoardDTO>> ExecuteAsync(CurrentUser currentUser, BoardFilterDTO filter, CancellationToken cancellationToken)
     {
         var query = repository.Entities.AsNoTracking();
 
@@ -24,15 +23,15 @@ public class SearchBoardsQuery(ICatalogRepository repository) : ISearchBoardsQue
 
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
-            var term = SearchFunctions.NormalizeTerm(filter.Name);
-                        query = query.Where(x => SearchFunctions.Unaccent(x.Name).ToLower().Contains(term));
+            query = query.Where(x => EF.Functions.ILike(x.Name, $"%{filter.Name}%"));
+            //query = query.Where(x => x.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
-        IList<BoardDTO> result = query
+        var result = await query
             .OrderBy(x => x.Name)
             .Skip(filter.pageIndex ?? 0)
             .Take(filter.pageSize ?? 20)
-            .Select(x => x.ToDTO()).ToList();
-        return Task.FromResult(result);
+            .Select(x => x.ToDTO()).ToListAsync(cancellationToken);
+        return await Task.FromResult(result);
     }
 }

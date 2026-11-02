@@ -118,6 +118,12 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 10. Define the Realm in Keycloak and register the test users.
 11. Configure Yarp: request limits, CORS, etc.: this should be the first task before publishing.
 
+## Running the project & Requirements
+- Visual Studio 2026 or later or insider versions, Visual Studio Code
+- .NET 10, Docker Desktop, NodeJS v24 LTS, Angular CLI v22, Aspire CLI >= 13.6.4
+- In Visual Studio set the startup project to `MountyPython.AppHost` and run it. The AppHost will start all the services and the frontend
+- Command line: `aspire run` in the root of the solution
+
 ## Parameters (AppHost), usually as user secrets
 {
   "Resources:rabbit:tcp:port": "31895",
@@ -139,4 +145,4 @@ The containerized app should be runnable both **locally** and in the **cloud**.
 - HIGH: Lots of bugs and functionality breaks
 - HIGH: Frontend Container in Azure ACA not reachable
 - MEDIUM: inssuficient automatic tests: registering eventsource and consumers
--
+- ... check the documentation in 'Solution Items\Documentation'
