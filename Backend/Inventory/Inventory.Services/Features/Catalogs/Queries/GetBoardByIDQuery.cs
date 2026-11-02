@@ -15,7 +15,7 @@ public class GetBoardByIDQuery(ICatalogRepository repository) : IGetBoardByIDQue
     public async Task<BoardDTO> ExecuteAsync(CurrentUser currentUser, string boardId, CancellationToken cancellationToken)
     {
         var board = await repository.GetByIDAsync(boardId, cancellationToken);
-        if (board is null || board.IsDisabled)
+        if (board is null || board.IsDeleted)
         {
             throw new NotFoundException($"Board '{boardId}' was not found.");
         }

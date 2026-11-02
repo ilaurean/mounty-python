@@ -2,7 +2,6 @@ using Commons.Domain;
 using Commons.Services;
 using Inventory.Contracts;
 using Inventory.Services.Features.Catalogs.Domain;
-using Inventory.Services.Features.Catalogs.Domain;
 
 namespace Inventory.Services.Features.Catalogs.Commands;
 
@@ -15,6 +14,8 @@ public class UpdateBoardCommand(ICatalogRepository repository) : IUpdateBoardCom
 {
     public async Task<Board> ExecuteAsync(CurrentUser currentUser, string boardId, UpdateBoardRequest request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request, nameof(request));
+
         currentUser.EnsureManager();
 
         var board = await repository.GetByIDAsync(boardId, cancellationToken)
@@ -25,14 +26,19 @@ public class UpdateBoardCommand(ICatalogRepository repository) : IUpdateBoardCom
             request.Description,
             request.Length,
             request.Width,
-            request.Components is null ? null : MergeComponents(board, request.Components));
+            MergeComponents(board, request.Components));
 
         await repository.SaveChangesAsync(cancellationToken);
         return board;
     }
 
-    private static IList<Component> MergeComponents(Board board, IEnumerable<ComponentRequest> requests)
+    private static List<Component>? MergeComponents(Board board, IEnumerable<ComponentRequest>? requests)
     {
+        if (requests is null)
+        {
+            return null;
+        }
+
         var result = new List<Component>();
         foreach (var request in requests)
         {

@@ -1,6 +1,7 @@
-import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HANDLE_HTTP_ERROR_LOCALLY } from '../../core/error.interceptor';
 import { CreateOrderRequest, Order, OrderAggregate, OrderFilter, UpdateOrderRequest } from '../../core/models';
 
 @Injectable({ providedIn: 'root' })
@@ -22,12 +23,16 @@ export class OrdersApi {
     return this.http.get<Order>(this.url(id));
   }
 
-  create(request: CreateOrderRequest): Observable<Order> {
-    return this.http.post<Order>(this.baseUrl, request);
+  create(request: CreateOrderRequest, handleErrorLocally = false): Observable<Order> {
+    return this.http.post<Order>(this.baseUrl, request, {
+      context: new HttpContext().set(HANDLE_HTTP_ERROR_LOCALLY, handleErrorLocally)
+    });
   }
 
-  update(id: string, request: UpdateOrderRequest): Observable<Order> {
-    return this.http.put<Order>(this.url(id), request);
+  update(id: string, request: UpdateOrderRequest, handleErrorLocally = false): Observable<Order> {
+    return this.http.put<Order>(this.url(id), request, {
+      context: new HttpContext().set(HANDLE_HTTP_ERROR_LOCALLY, handleErrorLocally)
+    });
   }
 
   startProcessing(id: string): Observable<Order> {

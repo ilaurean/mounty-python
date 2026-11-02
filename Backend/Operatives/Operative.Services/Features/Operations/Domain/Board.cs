@@ -17,12 +17,19 @@ public sealed class Board : ValueObject
 
     public IList<Component> Components { get; private set; } = [];
 
+    public static BoardBuilder Create => new();
+
     public class BoardBuilder
     {
-        private readonly Board board = new() { PK = Guid.NewGuid() };
+        private readonly Board board = new()
+        {
+            PK = Guid.NewGuid()
+        };
+
         public BoardBuilder WithID(string id) { board.ID = id; return this; }
         public BoardBuilder WithName(string name) { board.Name = name; return this; }
         public BoardBuilder WithComponents(IList<Component> components) { board.Components = components; return this; }
+
         public Board Build()
         {
             BoardValidator.Instance.ValidateAndThrow(board);

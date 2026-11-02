@@ -100,6 +100,7 @@ export interface OrderItemComponentRequest {
 }
 
 export interface CreateOrderItemRequest {
+  pk?: string;
   boardID: string;
   boardName: string;
   quantity: number;
@@ -140,5 +141,6 @@ export interface CreateOrderRequest {
 export interface UpdateOrderRequest {
   name?: string | null;
   description?: string | null;
+  orderDate?: string | null;
   items?: CreateOrderItemRequest[];
 }

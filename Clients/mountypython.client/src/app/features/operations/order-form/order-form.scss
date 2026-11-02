@@ -2,6 +2,11 @@ mat-form-field {
   width: 100%;
 }
 
+.save-error {
+  color: var(--mat-sys-error);
+  padding: 0 24px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr;

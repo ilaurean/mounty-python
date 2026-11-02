@@ -22,11 +22,22 @@ public class BaseOrderValidator : Validator<Order, BaseOrderValidator>
     }
 }
 
+public class IsOrderEditableValidator : Validator<Order, IsOrderEditableValidator>
+{
+    protected override void Configure()
+    {
+        Include(AuditableEntityValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Only non-deleted orders can be modified.");
+        RuleFor(x => x.Status).Equal(OrderStates.Created).WithMessage($"Only orders with status {OrderStates.Created} can be processed.");
+    }
+}
+
 public class IsOrderProcesableValidator : Validator<Order, IsOrderProcesableValidator>
 {
     protected override void Configure()
     {
-        RuleFor(x => x.Status).Equal(OrderStates.Created).WithMessage($"Only orders with status {OrderStates.Created} can be processed.");
+        Include(BaseOrderValidator.Instance);
+        Include(IsOrderEditableValidator.Instance);
     }
 }
 
@@ -34,6 +45,8 @@ public class IsOrderCancellableValidator : Validator<Order, IsOrderCancellableVa
 {
     protected override void Configure()
     {
+        Include(AuditableEntityValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Only non-deleted orders can be cancelled.");
         RuleFor(x => x.Status).Equal(OrderStates.Created).WithMessage($"Only orders with status {OrderStates.Created} can be cancelled.");
     }
 }
@@ -42,6 +55,18 @@ public class IsOrderCompletableValidator : Validator<Order, IsOrderCompletableVa
 {
     protected override void Configure()
     {
+        Include(AuditableEntityValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Only non-deleted orders can be completed.");
         RuleFor(x => x.Status).Equal(OrderStates.Processing).WithMessage($"Only orders with status {OrderStates.Processing} can be completed.");
+    }
+}
+
+public class IsOrderDeletableValidator : Validator<Order, IsOrderDeletableValidator>
+{
+    protected override void Configure()
+    {
+        Include(AuditableEntityValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Only non-deleted orders can be deleted.");
+        RuleFor(x => x.Status).Equal(OrderStates.Created).WithMessage($"Only orders with status {OrderStates.Created} can be deleted.");
     }
 }

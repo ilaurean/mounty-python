@@ -5,12 +5,10 @@
       <mat-label>Name</mat-label>
       <input matInput [formField]="orderForm.name" />
     </mat-form-field>
-    @if (isNew) {
-      <mat-form-field>
-        <mat-label>Order date</mat-label>
-        <input matInput type="date" [formField]="orderForm.orderDate" />
-      </mat-form-field>
-    }
+    <mat-form-field>
+      <mat-label>Order date</mat-label>
+      <input matInput type="date" [formField]="orderForm.orderDate" />
+    </mat-form-field>
     <mat-form-field class="wide">
       <mat-label>Description</mat-label>
       <textarea matInput rows="2" [formField]="orderForm.description"></textarea>
@@ -44,7 +42,10 @@
     </button>
   }
 </mat-dialog-content>
+@if (saveError(); as error) {
+  <p class="save-error" role="alert">{{ error }}</p>
+}
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" [disabled]="!canSave()" (click)="save()">Save</button>
+  <button mat-flat-button color="primary" [disabled]="!canSave() || saving()" (click)="save()">Save</button>
 </mat-dialog-actions>

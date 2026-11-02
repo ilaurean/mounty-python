@@ -22,3 +22,21 @@ public class BoardValidator : Validator<Board, BoardValidator>
             .ForEach(y => y.SetValidator(ComponentValidator.Instance));
     }
 }
+
+public class IsBoardEditableValidator : Validator<Board, IsBoardEditableValidator>
+{
+    protected override void Configure()
+    {
+        Include(BoardValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(true).WithMessage($"Only boards that are not deleted can be modified.");
+    }
+}
+
+public class IsBoardDeletableValidator : Validator<Board, IsBoardDeletableValidator>
+{
+    protected override void Configure()
+    {
+        Include(BoardValidator.Instance);
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Board already deleted.");
+    }
+}

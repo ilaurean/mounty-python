@@ -13,7 +13,7 @@ public sealed class Board : AuditableEntity
     public string Name { get; private set; }
 
     [StringLength(1024)]
-    public string Description { get; private set; }
+    public string? Description { get; private set; }
 
     public decimal? Length { get; private set; }
 
@@ -25,10 +25,12 @@ public sealed class Board : AuditableEntity
 
     public void Update(string name, string? description, decimal? length, decimal? width, IList<Component>? components = null)
     {
-        Name = name;
-        Description = description!;
-        Length = length;
-        Width = width;
+        IsBoardEditableValidator.Instance.ValidateAndThrow(this);
+
+        Name = name ?? Name;
+        Description = description ?? Description;
+        Length = length ?? Length;
+        Width = width ?? Width;
         if (components is not null)
         {
             foreach (var removed in Components.Where(c => components.All(n => n.PK != c.PK)).ToList())
@@ -47,6 +49,7 @@ public sealed class Board : AuditableEntity
 
     public override void Delete(DateTime? datetime = null)
     {
+        IsBoardDeletableValidator.Instance.ValidateAndThrow(this);
         base.Delete(datetime);
         Events.Add(new BoardDeletedEvent(this.ToDTO()));
     }

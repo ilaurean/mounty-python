@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AspireUseCliBundle>false</AspireUseCliBundle>
-	<NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+	  <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
     <UserSecretsId>e90fc62a-24ef-4d50-a823-bb397679d94f</UserSecretsId>
   </PropertyGroup>
 

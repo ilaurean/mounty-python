@@ -7,3 +7,4 @@ public record OrderUpdatedNameOrDescriptionEvent(OrderDTO Order) : DomainEvent<O
 public record OrderStartProcessingEvent(OrderDTO Order) : DomainEvent<OrderDTO>();
 public record OrderCompletedEvent(OrderDTO Order) : DomainEvent<OrderDTO>();
 public record OrderCancelledEvent(OrderDTO Order) : DomainEvent<OrderDTO>();
+public record OrderDeletedEvent(OrderDTO Order) : DomainEvent<OrderDTO>();
