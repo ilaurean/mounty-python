@@ -47,27 +47,24 @@ public class UpdateOrderCommand(IOrderRepository repository) : IUpdateOrderComma
             var existing = request.PK is null ? null : order.Items.FirstOrDefault(c => c.PK == request.PK);
             if (existing is null)
             {
-                if (existing is null)
-                {
-                    var boards = OrderItemFactory.Build([request], position);
-                    result.AddRange(boards);
-                    position += boards.Count;
-                    repository.Context.AddRange(boards);
-                    continue;
-                }
-                else
-                {
-                    repository.Context.Attach(existing.Board);
-                    existing.Update(++position, Board.Create
-                        .WithID(request.BoardID)
-                        .WithName(request.BoardName)
-                        .WithComponents(request.Components.Select(comp => Component.Create
-                            .WithName(comp.Name)
-                            .WithQuantity(comp.Quantity)
-                            .Build()).ToList())
-                        .Build(), request.Quantity);
-                }
-                result.Add(existing);
+                var boards = OrderItemFactory.Build([request], position);
+                result.AddRange(boards);
+                position += boards.Count;
+                repository.Context.AddRange(boards);
+                continue;
+            }
+            else
+            {
+                var board = Board.Create
+                    .WithID(request.BoardID)
+                    .WithName(request.BoardName)
+                    .WithComponents(request.Components.Select(comp => Component.Create
+                        .WithName(comp.Name)
+                        .WithQuantity(comp.Quantity)
+                        .Build()).ToList())
+                    .Build();
+                repository.Context.Add(board);
+                existing.Update(++position, board, request.Quantity);
             }
             result.Add(existing);
         }

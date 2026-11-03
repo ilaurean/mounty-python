@@ -34,7 +34,7 @@ public static class DomainExtensions
             order.CustomerID,
             order.OrderDate,
             order.Status,
-            order.Items.Count,
+            order.Items.Sum(i => i.Quantity),
             order.Items.Sum(i => i.Board.Components.Count)
         );
     }

@@ -5,12 +5,14 @@ using ILogger = Serilog.ILogger;
 
 namespace Notification.Services.Consumers;
 
-public class OrderCreatedConsumer(IPushNotificationService pushService, ILogger logger) :
+public class OrderConsumer(IPushNotificationService pushService, ILogger logger) :
     IHandleMessages<OrderCreatedEvent>,
     IHandleMessages<OrderUpdatedNameOrDescriptionEvent>,
+    IHandleMessages<OrderUpdatedItemsEvent>,
     IHandleMessages<OrderStartProcessingEvent>,
     IHandleMessages<OrderCompletedEvent>,
-    IHandleMessages<OrderCancelledEvent>
+    IHandleMessages<OrderCancelledEvent>,
+    IHandleMessages<OrderDeletedEvent>
 {
     public async Task Handle(OrderCreatedEvent orderEvent)
     {
@@ -21,6 +23,12 @@ public class OrderCreatedConsumer(IPushNotificationService pushService, ILogger 
     public async Task Handle(OrderUpdatedNameOrDescriptionEvent orderEvent)
     {
         logger.Information("Order with ID: {OrderId} updated its name or description.", orderEvent.Order.ID);
+        await pushService.UpdatedOrder(orderEvent.Order);
+    }
+
+    public async Task Handle(OrderUpdatedItemsEvent orderEvent)
+    {
+        logger.Information("Order with ID: {OrderId} updated its items.", orderEvent.Order.ID);
         await pushService.UpdatedOrder(orderEvent.Order);
     }
 
@@ -39,6 +47,12 @@ public class OrderCreatedConsumer(IPushNotificationService pushService, ILogger 
     public async Task Handle(OrderCancelledEvent orderEvent)
     {
         logger.Information("Order with ID: {OrderId} cancelled.", orderEvent.Order.ID);
+        await pushService.UpdatedOrder(orderEvent.Order);
+    }
+
+    public async Task Handle(OrderDeletedEvent orderEvent)
+    {
+        logger.Information("Order with ID: {OrderId} deleted.", orderEvent.Order.ID);
         await pushService.UpdatedOrder(orderEvent.Order);
     }
 }

@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { createActionGroup, createFeature, createReducer, emptyProps, on, props } from '@ngrx/store';
-import { Observable, catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, catchError, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 import { loadSession, saveSession } from '../../core/session-storage';
 import { CreateOrderRequest, Order, OrderAggregate, OrderFilter, OrderViewMode, SelectedOrder, UpdateOrderRequest } from '../../core/models';
 import { OrdersApi } from './orders.api';
@@ -34,6 +35,7 @@ export const ordersActions = createActionGroup({
     complete: props<{ id: string }>(),
     cancel: props<{ id: string }>(),
     'order upserted': props<{ order: Order }>(),
+    'order changed': emptyProps(),
     failure: emptyProps()
   }
 });
@@ -74,11 +76,25 @@ export const ordersFeature = createFeature({
 export class OrdersEffects {
   private readonly actions$ = inject(Actions);
   private readonly api = inject(OrdersApi);
+  private readonly store = inject(Store);
 
   readonly load$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ordersActions.load),
       switchMap(({ filter }) =>
+        this.api.search(filter).pipe(
+          map(orders => ordersActions.loadSuccess({ orders })),
+          catchError(() => of(ordersActions.failure()))
+        )
+      )
+    )
+  );
+
+  readonly orderChanged$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ordersActions.orderChanged),
+      withLatestFrom(this.store.select(ordersFeature.selectFilter)),
+      switchMap(([, filter]) =>
         this.api.search(filter).pipe(
           map(orders => ordersActions.loadSuccess({ orders })),
           catchError(() => of(ordersActions.failure()))

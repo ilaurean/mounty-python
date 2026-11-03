@@ -28,7 +28,7 @@ public class IsBoardEditableValidator : Validator<Board, IsBoardEditableValidato
     protected override void Configure()
     {
         Include(BoardValidator.Instance);
-        RuleFor(x => x.IsDeleted).Equal(true).WithMessage($"Only boards that are not deleted can be modified.");
+        RuleFor(x => x.IsDeleted).Equal(false).WithMessage($"Only boards that are not deleted can be modified.");
     }
 }
 
