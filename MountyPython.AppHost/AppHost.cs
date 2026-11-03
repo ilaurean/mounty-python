@@ -1,3 +1,5 @@
+using Aspire.Hosting.Yarp.Transforms;
+
 var builder = DistributedApplication.CreateBuilder(args);
 var isPublishing = builder.ExecutionContext.IsPublishMode;
 
@@ -45,7 +47,8 @@ var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycl
     .WithEnvironment("KC_DB", "postgres")
     .WithEnvironment("KC_DB_USERNAME", ReferenceExpression.Create($"{postgres!.Resource.UserName!}"))
     .WithEnvironment("KC_DB_PASSWORD", ReferenceExpression.Create($"{postgres!.Resource.Password!}"))
-    .WithEnvironment("KC_DB_URL", keycloakDbUrl).WithEnvironment("KC_HOSTNAME_STRICT", "false")
+    .WithEnvironment("KC_DB_URL", keycloakDbUrl)
+    .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_PROXY_HEADERS", "xforwarded")
     // OR: The only real suppression would be via Keycloak's --features-disabled flag — but the exact flag for the 3p-cookie check is not documented as a disableable feature in KC 26
@@ -122,7 +125,7 @@ var webApp = builder.AddJavaScriptApp("mountypython-client", "../Clients/mountyp
     {
         endpoint.UriScheme = "http";
         endpoint.TargetPort = isPublishing ? null : 4200;
-        endpoint.IsProxied = isPublishing;
+        //endpoint.IsProxied = isPublishing;
     });
 
 if (isPublishing)
@@ -134,8 +137,8 @@ if (isPublishing)
         .WithReference(notifications).WaitFor(notifications)
         .WithConfiguration(config =>
         {
-            config.AddRoute("/auth/{**catch-all}", keycloak);
-            //.WithTransformPathRemovePrefix("/auth");
+            config.AddRoute("/auth/{**catch-all}", keycloak)
+                .WithTransformPathRemovePrefix("/auth");
             config.AddRoute("/resources/{**catch-all}", keycloak);
             config.AddRoute("/realms/{**catch-all}", keycloak);
             config.AddRoute("/js/{**catch-all}", keycloak);
