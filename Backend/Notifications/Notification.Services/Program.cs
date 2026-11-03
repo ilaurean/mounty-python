@@ -1,8 +1,10 @@
 using Commons.Services;
+using Notification.Services.Consumers;
 using Notification.Services.Infrastructure.Messaging;
 using Rebus.Config;
 using Rebus.Retry.Simple;
 using Rebus.Routing.TypeBased;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -17,7 +19,8 @@ builder.Services.AddAuthorization();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddJsonProtocol(options =>
+    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddTransient<IPushNotificationService, PushNotificationService>();
 
 var rabbitConn = builder.Configuration.GetConnectionString("rabbit");
@@ -27,8 +30,9 @@ builder.Services.AddRebus(cfg => cfg
         maxDeliveryAttempts: 5,
         errorQueueName: "notification-error-queue",
         secondLevelRetriesEnabled: true))  // Enable second-level retries
-    .Routing(r => r.TypeBased()));
-builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
+    .Routing(r => r.TypeBased()),
+        onCreated: ConsumerExtensions.SubscribeToMessagesAsync);
+builder.Services.AddMessageHandlers();
 
 var app = builder.Build();
 app.UseMiddleware<LoggingMiddleware>();

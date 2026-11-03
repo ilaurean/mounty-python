@@ -9,6 +9,7 @@ namespace Operative.Services.Features.Operations;
 public interface IOrderRepository : IRepository<Order>
 {
     Task<Order?> GetByIDWithDetailsAsync(string id, CancellationToken cancellationToken);
+    OperativeDbContext Context { get; }
 }
 
 public class OrderRepository(OperativeDbContext context, IPublisher publisher) : Repository<Order, OperativeDbContext>(context, publisher), IOrderRepository
@@ -34,4 +35,6 @@ public class OrderRepository(OperativeDbContext context, IPublisher publisher) :
         await Context.Set<Order>().AddAsync(entity, cancellationToken);
         return entity;
     }
+
+    public OperativeDbContext Context => base.Context;
 }

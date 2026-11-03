@@ -48,7 +48,7 @@
 - CI builds and tests every push. CD deploys `dev-branch` to development, tags the verified commit, then promotes that exact tag from the merge commit's second parent. Keep the CD workflow's production branch filter (`main`) and its production job guard (`master`) aligned when changing branch policy; preserve the AppHost's publish-mode resource and route configuration when changing deployment behavior.
 
 ## Key Conventions
-- Queries should return directly Aggregate DTO, and not Domain Entities, However Commads can return Domain Entities, and the Controller maps them to DTOs.
+- Queries should return directly Aggregate DTO, and not Domain Entities, However Commands can return Domain Entities, and the Controller maps them to DTOs.
 - Queries should look like I<<Action>>Query and kept in the same file with the implementation: <<Action>>Query and defined in <<Project>>/Features/<<Feature>>/Queries. Each query in a separate file.
 - Commands should look like I<<Action>>Command and kept in the same file with the implementation: <<Action>>Command and defined in <<Project>>/Features/<<Feature>>/Commands. Each command in a separate file.
 - Consumers should look like I<<Action>>Consumer and kept in the same file with the implementation: <<Action>>Consumer and defined in <<Project>>/Features/<<Feature>>/Consumers. Each consumer in a separate file.
@@ -67,3 +67,6 @@
 - Create a realm in already defined but empty 'import.json' in the root of the project.
 - Create a theme based on Mounty Python's branding'.
 - Add 3 test users to the realm, 2 for users/customer (TestUser1, TestUser2) and 1 for manager role (TestManager).
+
+## Rebus Conventions
+- For Rebus pub/sub consumers in this project, subscribe to message types from the AddRebus onCreated callback; keep IHandleMessages<T> dependency-injection registrations explicit in the service collection.

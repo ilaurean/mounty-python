@@ -33,29 +33,31 @@ public sealed class Order : AuditableEntity
 
     public static OrderBuilder Create => new();
 
-    public void UpdateNameOrDescription(string? name, string? description)
+    public void UpdateNameOrDescription(string? name, string? description, DateTime? orderDate = null)
     {
+        IsOrderEditableValidator.Instance.ValidateAndThrow(this);
         Name = name ?? Name;
         Description = description;
+        OrderDate = orderDate ?? OrderDate;
         BaseOrderValidator.Instance.ValidateAndThrow(this);
         Events.Add(new OrderUpdatedNameOrDescriptionEvent(this.ToDTO()));
     }
 
     public void UpdateItems(IList<OrderItem> items)
     {
-        if (Status != OrderStates.Created)
+        ArgumentNullException.ThrowIfNull(items, nameof(items));
+        IsOrderEditableValidator.Instance.ValidateAndThrow(this);
+
+        foreach (var removed in Items.Where(c => items.All(n => n.Board.ID != c.Board.ID)).ToList())
         {
-            throw new FluentValidation.ValidationException("Order items can only be changed while the order is in 'Created' status.");
+            Items.Remove(removed);
         }
-        if (items.Count == 0)
+        foreach (var added in items.Where(n => Items.All(c => c.Board.ID != n.Board.ID)))
         {
-            throw new FluentValidation.ValidationException("An order must contain at least one item.");
+            Items.Add(added);
         }
-        Items.Clear();
-        foreach (var item in items)
-        {
-            Items.Add(item);
-        }
+
+        BaseOrderValidator.Instance.ValidateAndThrow(this);
         Events.Add(new OrderUpdatedNameOrDescriptionEvent(this.ToDTO()));
     }
 
@@ -78,6 +80,13 @@ public sealed class Order : AuditableEntity
         IsOrderCancellableValidator.Instance.ValidateAndThrow(this);
         Status = OrderStates.Cancelled;
         Events.Add(new OrderCancelledEvent(this.ToDTO()));
+    }
+
+    public override void Delete(DateTime? datetime = null)
+    {
+        IsOrderDeletableValidator.Instance.ValidateAndThrow(this);
+        base.Delete(datetime);
+        Events.Add(new OrderDeletedEvent(this.ToDTO()));
     }
 
     public class OrderBuilder

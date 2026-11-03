@@ -1,10 +1,14 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { applyEach, disabled, form, min, required } from '@angular/forms/signals';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { finalize, Observable } from 'rxjs';
+import { describeError } from '../../../core/error.interceptor';
 import { Board, ComponentRequest, CreateBoardRequest } from '../../../core/models';
 
 export interface BoardFormData {
   board?: Board;
+  save: (request: CreateBoardRequest) => Observable<Board>;
 }
 
 interface ComponentModel {
@@ -30,10 +34,12 @@ interface BoardModel {
   styleUrl: './board-form.scss'
 })
 export class BoardForm {
-  private readonly dialogRef = inject<MatDialogRef<BoardForm, CreateBoardRequest>>(MatDialogRef);
+  private readonly dialogRef = inject<MatDialogRef<BoardForm>>(MatDialogRef);
   private readonly data = inject<BoardFormData>(MAT_DIALOG_DATA);
 
   protected readonly isNew = !this.data.board;
+  protected readonly saving = signal(false);
+  protected readonly saveError = signal<string | null>(null);
 
   protected readonly model = signal<BoardModel>({
     id: this.data.board?.id ?? '',
@@ -70,7 +76,7 @@ export class BoardForm {
   }
 
   protected save(): void {
-    if (!this.canSave()) {
+    if (!this.canSave() || this.saving()) {
       return;
     }
     const value = this.model();
@@ -80,13 +86,19 @@ export class BoardForm {
       description: c.description || null,
       quantity: c.quantity
     }));
-    this.dialogRef.close({
+    const request = {
       id: value.id,
       name: value.name,
       description: value.description || null,
       length: value.length,
       width: value.width,
       components
+    };
+    this.saveError.set(null);
+    this.saving.set(true);
+    this.data.save(request).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: () => this.dialogRef.close(),
+      error: (error: HttpErrorResponse) => this.saveError.set(describeError(error))
     });
   }
 }

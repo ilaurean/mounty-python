@@ -3,7 +3,7 @@ import { form } from '@angular/forms/signals';
 import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { Store } from '@ngrx/store';
-import { filter as filterOperator } from 'rxjs';
+import { EMPTY, filter as filterOperator, tap } from 'rxjs';
 import { AuthService } from '../../../core/auth.service';
 import { ORDER_STATUSES, Order, OrderAggregate, OrderDetailsData, OrderSearch, OrderStatus, OrderViewMode } from '../../../core/models';
 import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog';
@@ -89,10 +89,10 @@ export class OrderList implements OnInit {
   }
 
   protected create(): void {
-    this.openForm({}).subscribe(result => {
-      if (result.create) {
-        this.store.dispatch(ordersActions.create({ request: result.create }));
-      }
+    this.openForm({
+      save: result => result.create
+        ? this.api.create(result.create, true).pipe(tap(order => this.store.dispatch(ordersActions.orderUpserted({ order }))))
+        : EMPTY
     });
   }
 
@@ -105,10 +105,11 @@ export class OrderList implements OnInit {
     if (mode === 'details') {
       this.dialog.open<OrderDetails, OrderDetailsData>(OrderDetails, { data: { order }, panelClass: 'app-dialog' });      return;
     }
-    this.openForm({ order }).subscribe(result => {
-      if (result.update) {
-        this.store.dispatch(ordersActions.update({ id: order.id, request: result.update }));
-      }
+    this.openForm({
+      order,
+      save: result => result.update
+        ? this.api.update(order.id, result.update, true).pipe(tap(updated => this.store.dispatch(ordersActions.orderUpserted({ order: updated }))))
+        : EMPTY
     });
   }
 
@@ -145,9 +146,6 @@ export class OrderList implements OnInit {
   }
 
   private openForm(data: OrderFormData) {
-    return this.dialog
-      .open<OrderForm, OrderFormData, OrderFormResult>(OrderForm, { data, panelClass: 'app-dialog' })
-      .afterClosed()
-      .pipe(filterOperator((result): result is OrderFormResult => !!result));
+    this.dialog.open<OrderForm, OrderFormData>(OrderForm, { data, panelClass: 'app-dialog' });
   }
 }

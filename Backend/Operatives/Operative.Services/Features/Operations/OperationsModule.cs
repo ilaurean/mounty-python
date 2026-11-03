@@ -1,14 +1,31 @@
 ﻿using Commons.Services;
 using Microsoft.AspNetCore.Mvc;
+using Inventory.Contracts.Events;
 using Operative.Contracts;
+using Operative.Services.Features.Operations.Consumers;
 using Operative.Services.Features.Operations.Commands;
 using Operative.Services.Features.Operations.Domain;
 using Operative.Services.Features.Operations.Queries;
+using Rebus.Bus;
+using Rebus.Handlers;
 
 namespace Operative.Services.Features.Operations;
 
 public static class OperationsModule
 {
+    public static IServiceCollection AddOperationsMessageHandlers(this IServiceCollection services)
+    {
+        services.AddTransient<IHandleMessages<BoardUpdatedEvent>, BoardUpdatedConsumer>();
+        services.AddTransient<IHandleMessages<BoardDeletedEvent>, BoardDeletedConsumer>();
+        return services;
+    }
+
+    public static async Task SubscribeToBoardEventsAsync(IBus bus)
+    {
+        await bus.Subscribe<BoardUpdatedEvent>();
+        await bus.Subscribe<BoardDeletedEvent>();
+    }
+
     public static IServiceCollection AddOperationsServices(this IServiceCollection services)
     {
         services.AddScoped<IOrderRepository, OrderRepository>();

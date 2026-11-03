@@ -26,7 +26,7 @@ export class App implements OnInit {
       this.snackBar.open(`Board "${board.name}" was updated`, undefined, { duration: 4000 });
     });
     this.signalr.order$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(order => {
-      this.store.dispatch(ordersActions.orderUpserted({ order }));
+      this.store.dispatch(ordersActions.orderChanged());
       this.snackBar.open(`Order "${order.name}" is now ${order.status}`, undefined, { duration: 4000 });
     });
     void this.signalr.start();

@@ -47,7 +47,10 @@
     <mat-icon>add</mat-icon> Add component
   </button>
 </mat-dialog-content>
+@if (saveError(); as error) {
+  <p class="save-error" role="alert">{{ error }}</p>
+}
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" [disabled]="!canSave()" (click)="save()">Save</button>
+  <button mat-flat-button color="primary" [disabled]="!canSave() || saving()" (click)="save()">Save</button>
 </mat-dialog-actions>

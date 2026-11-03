@@ -17,12 +17,26 @@ public sealed class OrderItem : ValueObject
     [Required]
     public int Quantity { get; private set; }
 
+    public void Update(int position, Board board, int quantity)
+    {
+        Position = position;
+        Board = board;
+        Quantity = quantity;
+        OrderItemValidator.Instance.ValidateAndThrow(this);
+    }
+
+    public static OrderItemBuilder Create => new();
+
     public class OrderItemBuilder
     {
-        private readonly OrderItem orderItem = new() { PK = Guid.NewGuid() };
+        private readonly OrderItem orderItem = new()
+        {
+            PK = Guid.NewGuid()
+        };
         public OrderItemBuilder WithPosition(int position) { orderItem.Position = position; return this; }
         public OrderItemBuilder WithBoard(Board board) { orderItem.Board = board; return this; }
         public OrderItemBuilder WithQuantity(int quantity) { orderItem.Quantity = quantity; return this; }
+
         public OrderItem Build()
         {
             OrderItemValidator.Instance.ValidateAndThrow(orderItem);

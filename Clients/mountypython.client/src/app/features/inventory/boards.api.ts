@@ -1,6 +1,7 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HANDLE_HTTP_ERROR_LOCALLY } from '../../core/error.interceptor';
 import { Board, BoardFilter, CreateBoardRequest, UpdateBoardRequest } from '../../core/models';
 
 @Injectable({ providedIn: 'root' })
@@ -18,12 +19,16 @@ export class BoardsApi {
     return this.http.get<Board[]>(this.baseUrl, { params });
   }
 
-  create(request: CreateBoardRequest): Observable<Board> {
-    return this.http.post<Board>(this.baseUrl, request);
+  create(request: CreateBoardRequest, handleErrorLocally = false): Observable<Board> {
+    return this.http.post<Board>(this.baseUrl, request, {
+      context: new HttpContext().set(HANDLE_HTTP_ERROR_LOCALLY, handleErrorLocally)
+    });
   }
 
-  update(id: string, request: UpdateBoardRequest): Observable<Board> {
-    return this.http.put<Board>(`${this.baseUrl}/${encodeURIComponent(id)}`, request);
+  update(id: string, request: UpdateBoardRequest, handleErrorLocally = false): Observable<Board> {
+    return this.http.put<Board>(`${this.baseUrl}/${encodeURIComponent(id)}`, request, {
+      context: new HttpContext().set(HANDLE_HTTP_ERROR_LOCALLY, handleErrorLocally)
+    });
   }
 
   delete(id: string): Observable<void> {

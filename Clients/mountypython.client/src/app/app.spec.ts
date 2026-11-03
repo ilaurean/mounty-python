@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { Store } from '@ngrx/store';
 import { RouterModule, provideRouter } from '@angular/router';
 import { provideStore } from '@ngrx/store';
 import { Subject } from 'rxjs';
@@ -11,6 +12,7 @@ import { App } from './app';
 import { AuthService } from './core/auth.service';
 import { Board, Order } from './core/models';
 import { SignalrService } from './core/signalr.service';
+import { ordersActions } from './features/operations/orders.store';
 
 describe('App', () => {
   const board$ = new Subject<Board>();
@@ -37,7 +39,11 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(start).toHaveBeenCalled();
-    order$.next({ name: 'Order 1', status: 'Processing' } as Order);
+    const updatedOrder = { name: 'Order 1', status: 'Processing' } as Order;
+    const dispatch = vi.spyOn(TestBed.inject(Store), 'dispatch');
+    order$.next(updatedOrder);
+    expect(dispatch).toHaveBeenCalledWith(ordersActions.orderChanged());
+    expect(dispatch).not.toHaveBeenCalledWith(ordersActions.orderUpserted({ order: updatedOrder }));
     expect(open).toHaveBeenCalledWith('Order "Order 1" is now Processing', undefined, { duration: 4000 });
   });
 });

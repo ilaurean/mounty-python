@@ -31,7 +31,7 @@ public abstract class AuditableEntity : ValueObject
     }
 
     [NotMapped]
-    public bool IsDisabled => DeleteDate.HasValue;
+    public bool IsDeleted => DeleteDate.HasValue;
 
     [NotMapped]
     public IList<DomainEvent> Events { get; private set; } = [];

@@ -22,6 +22,7 @@ builder.Services.AddMountyJwtBearer(builder.Configuration, builder.Environment);
 builder.Services.AddMountyAuthorization();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddOperationsServices();
+builder.Services.AddOperationsMessageHandlers();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -33,8 +34,8 @@ builder.Services.AddRebus(cfg => cfg
         maxDeliveryAttempts: 5,
         errorQueueName: "operative-error-queue",
         secondLevelRetriesEnabled: true))  // Enable second-level retries
-    .Routing(r => r.TypeBased()));
-builder.Services.AutoRegisterHandlersFromAssemblyOf<Program>();
+    .Routing(r => r.TypeBased()),
+        onCreated: OperationsModule.SubscribeToBoardEventsAsync);
 builder.Services.AddScoped<IPublisher, Publisher>();
 
 builder.Services.AddHostedService<MigratorHostedService<OperativeDbContext>>();
