@@ -71,7 +71,11 @@ var keycloak = builder.AddKeycloak("mountypython-keycloak", adminUsername: keycl
     .WithContainerName("mountypython-keycloak-container")
     .PublishAsContainer();
 
-if (!isPublishing)
+if (isPublishing)
+{
+    keycloak.WithDockerfile("./keycloak");
+}
+else
 {
     keycloak.WithDataVolume()
         .WithRealmImport("./import.json")

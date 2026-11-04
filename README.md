@@ -139,10 +139,18 @@ The containerized app should be runnable both **locally** and in the **cloud**.
   "AppHost:DashboardApiKey": ""
 }
 
+## Deploying on Azure ACA
+- there are some manual jobs to do, due to missing fqdn and domain name:
+defining in the mountypython realm in keycloak,
+mountainpythin-client the values for `Valid Redirect Uri` and `Web Origin` with the fqdn after deplyoment or domain name.
+
+
 ## Known issues
 - HIGH: security, default password for keycloak-admin in code
 - HIGH: security, realm with test users in versioning systems
 - HIGH: Lots of bugs and functionality breaks
-- HIGH: Frontend Container in Azure ACA not reachable
-- MEDIUM: inssuficient automatic tests: registering eventsource and consumers
+- HIGH: creating Order request is not idempotent
+- HIGH: missing CORS and rate-limiter in APIs
+- MEDIUM: Missing generation of Correlation ID and forward it to the DomainEvents. Still the lgger is ready for correlation
+- MEDIUM: insufficient automatic tests: registering eventsource and consumers
 - ... check the documentation in 'Solution Items\Documentation'

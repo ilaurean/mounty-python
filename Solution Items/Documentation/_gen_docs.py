@@ -294,6 +294,18 @@ SECTIONS = [
             ["YARP", "Yet Another Reverse Proxy."],
             ["C4 / arc42", "Documentation models used for the diagrams and the structure of this document."]]),
     ]),
+    ("13. Known Issues", [
+        ("b", [
+            "HIGH: Keycloak admin currently has a default password configured in code; replace it with a securely managed secret before production use.",
+            "HIGH: The versioned Keycloak realm contains test users; remove or separate test accounts and credentials from production configuration.",
+            "HIGH: The application still has known bugs and functionality gaps; perform a focused quality review before production use.",
+            "HIGH: Order creation requests are not idempotent; client retries may create duplicate orders.",
+            "HIGH: API CORS policies and rate limiting are missing; define permitted origins and abuse protection before exposing APIs broadly.",
+            "MEDIUM: Correlation IDs are not generated and propagated to domain events, although the logger is ready to include correlation context.",
+            "MEDIUM: Automated coverage is insufficient, particularly for event-source registration and consumer delivery.",
+            "MEDIUM: Azure deployment currently requires a manual Keycloak client update after deployment: set Valid Redirect URIs and Web Origins to the deployed frontend FQDN or configured custom domain."
+        ]),
+    ]),
 ]
 
 
