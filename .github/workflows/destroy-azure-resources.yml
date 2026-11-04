@@ -73,10 +73,12 @@ jobs:
           Azure__SubscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           Azure__Location:       ${{ env.AZURE_LOCATION }}
           Azure__ResourceGroup:  rg-mountypython-${{ github.event.inputs.environment }}
+          ENVIRONMENT:           ${{ github.event.inputs.environment == 'prod' && 'Production' || 'Development' }}
           DOTNET_ENVIRONMENT:    ${{ github.event.inputs.environment == 'prod' && 'Production' || 'Development' }}
         run: |
           aspire destroy \
             --apphost MountyPython.AppHost/MountyPython.AppHost.csproj \
+            --environment "${{ github.event.inputs.environment }}" \
             --non-interactive \
             --yes
             
